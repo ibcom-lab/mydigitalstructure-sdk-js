@@ -1,0 +1,14 @@
+.myds-sort
+{
+  cursor: ns-resize;
+}
+
+.myds-view
+{
+  min-height: 600px;
+}
+
+.myds-click, .myds-navigate, .myds-list, .myds-dropdown
+{
+  cursor: pointer;
+}

@@ -1,0 +1,50 @@
+.myds-sort
+{
+  cursor: ns-resize;
+}
+
+.myds-view
+{
+  min-height: 600px;
+  margin-bottom: 20px;
+}
+
+.myds-click, .myds-navigate, .myds-list, .myds-dropdown
+{
+  cursor: pointer;
+}
+
+.myds-page-view
+{
+	width : 100%;
+}
+
+.myds-validate-error
+{
+  color: #dc3545 !important;
+  border-left-color: #dc3545 !important;
+  border-left-width: 2px !important;
+}
+
+.myds-check
+{
+	margin-right: 6px;
+}
+
+.myds-dropzone
+{
+    min-height: 140px;
+    border: 1px dashed #1c84c6;
+    background: white;
+    padding: 20px 20px;
+}
+
+.dz-filename
+{
+  cursor: pointer;
+}
+
+.bootstrap-datetimepicker-widget.dropdown-menu
+{
+	width: 16rem;
+}

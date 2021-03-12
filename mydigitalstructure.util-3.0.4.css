@@ -1,0 +1,31 @@
+.myds-sort
+{
+  cursor: ns-resize;
+}
+
+.myds-view
+{
+  min-height: 600px;
+  margin-bottom: 20px;
+}
+
+.myds-click, .myds-navigate, .myds-list, .myds-dropdown
+{
+  cursor: pointer;
+}
+
+.myds-page-view
+{
+	width : 100%;
+}
+
+.myds-validate-error
+{
+	border-color: red !important;
+	color: red !important;
+}
+
+.myds-check
+{
+	margin-right: 6px;
+}
