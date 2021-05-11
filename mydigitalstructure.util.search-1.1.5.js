@@ -1086,6 +1086,15 @@ mydigitalstructure._util.factory.search = function (param)
 		code: function (param, rows)
 		{	
 			var search = app._util.param.get(param, 'search', {default: {}}).value;
+			var setLegend = app._util.param.get(param, 'legend').value;
+
+			if (setLegend == undefined)
+			{
+				if (search.chart != undefined)
+				{
+					if (search.chart.legend) {setLegend = true}
+				}
+			}
 
 			var chartOptions = app._util.param.get(search, 'options', {default: {}}).value;
 
@@ -1116,13 +1125,34 @@ mydigitalstructure._util.factory.search = function (param)
 			var chartContainerSelector = app._util.param.get(param, 'chartContainerSelector').value;
 			var legendContainerSelector = app._util.param.get(param, 'legendContainerSelector').value;
 
+			if (setLegend == undefined)
+			{
+				setLegend = (legendContainerSelector != undefined)
+			}
+	
 			if (chartContainerSelector == undefined)
 			{
 				chartContainerSelector = containerSelector;
+
+				if (setLegend)
+				{
+					chartContainerSelector = chartContainerSelector + '-chart';
+				}
+			}
+
+			if (setLegend && legendContainerSelector == undefined)
+			{
+				legendContainerSelector = containerSelector + '-legend'
 			}
 
 			if (containerSelector != undefined)
 			{
+				mydigitalstructure._util.view.queue.show(containerSelector, 
+				[
+					'<div id="', _.replace(chartContainerSelector, '#', ''), '"></div>',
+					'<div id="',  _.replace(legendContainerSelector, '#', ''), '"></div>'
+				]);
+
 				var chartType = app._util.param.get(chartOptions, 'options', {default: 'Bar', remove: true}).value;
 
 				if (rows.length == 0)
@@ -1184,6 +1214,32 @@ mydigitalstructure._util.factory.search = function (param)
 							chartData.series[0].data.push(row[dataField])
 						};
 					});
+
+					if (setLegend)
+					{
+						var legendView = [];
+
+						var seriesLabels = _.map(chartData.series, 'name');
+
+						if (seriesLabels.length != 0)
+						{
+							legendView.push('<ul class="ct-legend">');
+
+							_.each(seriesLabels, function (seriesLabel, sL)
+							{
+								legendView.push('<li class="ct-series-' + (sL + 1) + '" data-legend="' + (sL + 1) + '">' + seriesLabel + '</li>');
+							});
+
+							legendView.push('</ul>');
+
+							if (legendContainerSelector == undefined)
+							{
+								legendContainerSelector = search.containerSelector + '-legend'
+							}
+
+							app.show(legendContainerSelector, legendView.join(''));
+						}
+					}
 
 					if (app._util.controller.exists('util-view-chart-render'))
 					{
