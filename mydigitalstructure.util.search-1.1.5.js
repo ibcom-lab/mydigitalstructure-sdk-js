@@ -1098,13 +1098,27 @@ mydigitalstructure._util.factory.search = function (param)
 			var name = app._util.param.get(search, 'name').value;
 
 			var noDataText = app._util.param.get(search, 'noDataText', {default: '<div class="text-muted">No data.</div>'}).value;
-			var chartData = app._util.param.get(search, 'chartData').value;
+
+			var chartData = app._util.param.get(param, 'chartData').value;
+
+			if (chartData == undefined && _.has(search, 'chart.data'))
+			{
+				chartData = search.chart.data;
+			}
 
 			var fields = app._util.param.get(search.chart, 'fields', {default: {}}).value;
 			
 			if (containerSelector == undefined && name != undefined)
 			{
 				containerSelector = '#' + name
+			}
+
+			var chartContainerSelector = app._util.param.get(param, 'chartContainerSelector').value;
+			var legendContainerSelector = app._util.param.get(param, 'legendContainerSelector').value;
+
+			if (chartContainerSelector == undefined)
+			{
+				chartContainerSelector = containerSelector;
 			}
 
 			if (containerSelector != undefined)
@@ -1175,7 +1189,7 @@ mydigitalstructure._util.factory.search = function (param)
 					{
 						app.invoke('util-view-chart-render',
 						{
-							containerSelector: containerSelector,
+							containerSelector: chartContainerSelector,
 							type: chartType,
 							options: chartOptions,
 							data: chartData,
@@ -1187,7 +1201,7 @@ mydigitalstructure._util.factory.search = function (param)
 					{
 						if (_.isObject(Chartist))
 						{
-							new Chartist[chartType](containerSelector, chartData, chartOptions);
+							new Chartist[chartType](chartContainerSelector, chartData, chartOptions);
 						}
 					}
 				}
