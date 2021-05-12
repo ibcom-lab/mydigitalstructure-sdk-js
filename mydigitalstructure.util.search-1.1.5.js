@@ -1153,7 +1153,7 @@ mydigitalstructure._util.factory.search = function (param)
 					'<div id="',  _.replace(legendContainerSelector, '#', ''), '"></div>'
 				]);
 
-				var chartType = app._util.param.get(chartOptions, 'options', {default: 'Bar', remove: true}).value;
+				var chartType = app._util.param.get(chartOptions, 'type', {default: 'Bar', remove: true}).value;
 
 				if (rows.length == 0)
 				{
@@ -1166,15 +1166,27 @@ mydigitalstructure._util.factory.search = function (param)
 
 					if (chartData == undefined)
 					{
-						chartData =
-						{	
-							labels: [],
-							series:
-							[
-								{
-									data: []
-								}
-							]
+						if (chartType == 'Bar')
+						{
+							chartData =
+							{	
+								labels: [],
+								series:
+								[
+									{
+										data: []
+									}
+								]
+							}
+						}
+
+						if (chartType == 'Pie')
+						{
+							chartData =
+							{	
+								labels: [],
+								series: []
+							}
 						}
 					}
 					else
@@ -1202,6 +1214,18 @@ mydigitalstructure._util.factory.search = function (param)
 						dataField = _.last(_.keys(_.first(rows)));
 					}
 
+					var dataField = 'count';
+
+					if (_.has(search, 'chart.fields.data'))
+					{
+						dataField - search.chart.fields.data;
+					}
+
+					rows = _.reverse(_.sortBy(rows, function (row) 
+					{
+						return numeral(row[dataField]).value()
+					}));
+
 					_.each(rows, function (row)
 					{
 						if (setLabels)
@@ -1211,7 +1235,15 @@ mydigitalstructure._util.factory.search = function (param)
 
 						if (setSeries)
 						{
-							chartData.series[0].data.push(row[dataField])
+							if (chartType == 'Bar')
+							{
+								chartData.series[0].data.push(row[dataField])
+							}
+
+							if (chartType == 'Pie')
+							{
+								chartData.series.push(row[dataField])
+							}
 						};
 					});
 
@@ -1219,7 +1251,12 @@ mydigitalstructure._util.factory.search = function (param)
 					{
 						var legendView = [];
 
-						var seriesLabels = _.map(chartData.series, 'name');
+						var seriesLabels = chartData.labels;
+
+						if (chartType == 'Bar')
+						{
+							seriesLabels = _.map(chartData.series, 'name');
+						}
 
 						if (seriesLabels.length != 0)
 						{
@@ -1238,6 +1275,26 @@ mydigitalstructure._util.factory.search = function (param)
 							}
 
 							app.show(legendContainerSelector, legendView.join(''));
+						}
+					}
+
+					if (search.chart.showAsPercentage)
+					{
+						var sum = _.sum(chartData.series);
+
+						chartOptions.labelInterpolationFnc = function(value, index)
+						{
+							return Math.round(chartData.series[index] / sum * 100) + '%';
+						}
+					}
+
+					if (search.chart.showAsPercentageValue)
+					{
+						var sum = _.sum(chartData.series);
+
+						chartOptions.labelInterpolationFnc = function(value, index)
+						{
+							return Math.round(chartData.series[index] / sum * 100) + '% (' + chartData.series[index] + ')'
 						}
 					}
 
