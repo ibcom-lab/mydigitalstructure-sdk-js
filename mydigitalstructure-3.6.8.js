@@ -666,8 +666,6 @@ mydigitalstructure.retrieve = function (param)
 
 				if (includeMetadataGUID)
 				{
-					
-
 					if (_.isUndefined(_.find(param.data.criteria.fields, function (field) {return field.name == 'guid'}))
 							&& _.isUndefined(_.find(param.data.criteria.fields, function (field) {return _.includes(field.name, '(')})))
 					{
