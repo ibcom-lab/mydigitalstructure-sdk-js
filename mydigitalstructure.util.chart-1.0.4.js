@@ -33,17 +33,18 @@ mydigitalstructure._util.factory.chart = function (param)
 		code: function (param, rawData)
 		{	
 			//var search = app._util.param.get(param, 'search', {default: {}}).value;
-			var setLegend = app._util.param.get(param, 'legend').value;
+			var setLegend = app._util.param.get(param, 'legend', {default: false}).value;
+			var reverseLegend = app._util.param.get(param, 'reverseLegend', {default: false}).value;
+			var foreignObjects = app._util.param.get(param, 'foreignObjects').value;
 
-			if (setLegend == undefined)
+			if (rawData == undefined) {rawData = []}
+
+			var chartOptions = app._util.param.get(param, 'chartOptions').value;
+
+			if (chartOptions == undefined)
 			{
-				if (search.chart != undefined)
-				{
-					if (search.chart.legend) {setLegend = true}
-				}
+				chartOptions = app._util.param.get(param, 'options').value;
 			}
-
-			var chartOptions = app._util.param.get(param, 'options', {default: {}}).value;
 
 			var containerSelector = app._util.param.get(param, 'containerSelector').value;
 			//var name = app._util.param.get(search, 'name').value;
@@ -66,6 +67,8 @@ mydigitalstructure._util.factory.chart = function (param)
 
 			var chartContainerSelector = app._util.param.get(param, 'chartContainerSelector').value;
 			var legendContainerSelector = app._util.param.get(param, 'legendContainerSelector').value;
+			var showAsPercentage = app._util.param.get(param, 'showAsPercentage').value;
+			var showAsPercentageValue = app._util.param.get(param, 'showAsPercentageValue').value;
 
 			if (setLegend == undefined)
 			{
@@ -97,12 +100,12 @@ mydigitalstructure._util.factory.chart = function (param)
 
 				var chartType = app._util.param.get(chartOptions, 'type', {default: 'Bar', remove: true}).value;
 
-				if (rows.length == 0)
-				{
-					app.show(containerSelector, noDataText);
-				}
-				else
-				{
+				//if (rawData.length == 0)
+				//{
+					//app.show(containerSelector, noDataText);
+				//}
+				//else
+				//{
 					var setLabels = true;
 					var setSeries = true;
 
@@ -193,7 +196,12 @@ mydigitalstructure._util.factory.chart = function (param)
 					{
 						var legendView = [];
 
-						var seriesLabels = chartData.labels;
+						var seriesLabels = [];
+
+						_.each(chartData.labels, function (label)
+						{
+							seriesLabels.push(label)
+						});
 
 						if (chartType == 'Bar')
 						{
@@ -204,11 +212,20 @@ mydigitalstructure._util.factory.chart = function (param)
 						{
 							legendView.push('<ul class="ct-legend">');
 
+							var legendViewItems = [];
+
 							_.each(seriesLabels, function (seriesLabel, sL)
 							{
-								legendView.push('<li class="ct-series-' + (sL + 1) + '" data-legend="' + (sL + 1) + '">' + seriesLabel + '</li>');
+								legendViewItems.push('<li class="ct-series-' + (sL + 1) + '" data-legend="' + (sL + 1) + '">' + seriesLabel + '</li>');
 							});
 
+							if (reverseLegend)
+							{
+								legendViewItems = _.reverse(legendViewItems)
+							}
+
+							legendView = _.concat(legendView, legendViewItems);
+							
 							legendView.push('</ul>');
 
 							if (legendContainerSelector == undefined)
@@ -240,22 +257,21 @@ mydigitalstructure._util.factory.chart = function (param)
 						}
 					}
 
-					
 					app.invoke('util-view-chart-render',
 					{
 						containerSelector: chartContainerSelector,
 						type: chartType,
 						options: chartOptions,
 						data: chartData,
-						_param: param,
-						clear: true
+						clear: true,
+						foreignObjects: foreignObjects,
+						_param: param
 					});
 					
-				}
+				//}
 			}
 		}
 	});
-
 
 	app.add(
 	{
@@ -267,7 +283,8 @@ mydigitalstructure._util.factory.chart = function (param)
 			var options = app._util.param.get(param, 'options').value;
 			var viewOptions = app._util.param.get(param, 'viewOptions').value;
 			var containerSelector = app._util.param.get(param, 'containerSelector').value;
-			var clear = app._util.param.get(param, 'clear').value
+			var clear = app._util.param.get(param, 'clear').value;
+			var foreignObjects = app._util.param.get(param, 'foreignObjects', {default: false}).value
 
 			if (containerSelector != undefined)
 			{
@@ -279,7 +296,7 @@ mydigitalstructure._util.factory.chart = function (param)
 				if (_.isObject(Chartist))
 				{
 					var chartistChart = new Chartist[type](containerSelector, data, options, viewOptions);
-					chartistChart.supportsForeignObject = false;
+					chartistChart.supportsForeignObject = foreignObjects;
 				}
 			}
 		}
