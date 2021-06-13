@@ -35,6 +35,7 @@ mydigitalstructure._util.factory.chart = function (param)
 			//var search = app._util.param.get(param, 'search', {default: {}}).value;
 			var setLegend = app._util.param.get(param, 'legend', {default: false}).value;
 			var reverseLegend = app._util.param.get(param, 'reverseLegend', {default: false}).value;
+			var reverseLegendView = app._util.param.get(param, 'reverseLegendView', {default: false}).value;
 			var foreignObjects = app._util.param.get(param, 'foreignObjects').value;
 
 			if (rawData == undefined) {rawData = []}
@@ -203,7 +204,7 @@ mydigitalstructure._util.factory.chart = function (param)
 							seriesLabels.push(label)
 						});
 
-						if (chartType == 'Bar')
+						if (chartType == 'Bar' || chartType == 'Line')
 						{
 							seriesLabels = _.map(chartData.series, 'name');
 						}
@@ -214,18 +215,23 @@ mydigitalstructure._util.factory.chart = function (param)
 
 							var legendViewItems = [];
 
+							if (reverseLegend)
+							{
+								seriesLabels = _.reverse(seriesLabels)
+							}
+
 							_.each(seriesLabels, function (seriesLabel, sL)
 							{
 								legendViewItems.push('<li class="ct-series-' + (sL + 1) + '" data-legend="' + (sL + 1) + '">' + seriesLabel + '</li>');
 							});
 
-							if (reverseLegend)
+							if (reverseLegendView)
 							{
 								legendViewItems = _.reverse(legendViewItems)
 							}
 
 							legendView = _.concat(legendView, legendViewItems);
-							
+
 							legendView.push('</ul>');
 
 							if (legendContainerSelector == undefined)
