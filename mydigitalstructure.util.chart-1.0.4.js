@@ -34,6 +34,7 @@ mydigitalstructure._util.factory.chart = function (param)
 		{	
 			//var search = app._util.param.get(param, 'search', {default: {}}).value;
 			var setLegend = app._util.param.get(param, 'legend', {default: false}).value;
+			var legendText = app._util.param.get(param, 'legendText', {default: ''}).value;
 			var reverseLegend = app._util.param.get(param, 'reverseLegend', {default: false}).value;
 			var reverseLegendView = app._util.param.get(param, 'reverseLegendView', {default: false}).value;
 			var foreignObjects = app._util.param.get(param, 'foreignObjects').value;
@@ -80,13 +81,13 @@ mydigitalstructure._util.factory.chart = function (param)
 			{
 				chartContainerSelector = containerSelector;
 
-				if (setLegend)
+				if ((setLegend || legendText != ''))
 				{
 					chartContainerSelector = chartContainerSelector + '-chart';
 				}
 			}
 
-			if (setLegend && legendContainerSelector == undefined)
+			if ((setLegend || legendText != '') && legendContainerSelector == undefined)
 			{
 				legendContainerSelector = containerSelector + '-legend'
 			}
@@ -206,7 +207,20 @@ mydigitalstructure._util.factory.chart = function (param)
 
 						if (chartType == 'Bar' || chartType == 'Line')
 						{
-							seriesLabels = _.map(chartData.series, 'name');
+							seriesLabels = [];
+
+							_.each(chartData.series, function (series)
+							{
+								if (series.caption != undefined)
+								{
+									seriesLabels.push(series.caption);
+								}
+								else
+								{
+									seriesLabels.push(series.name);
+								}
+							})
+							//seriesLabels = _.map(chartData.series, 'name');
 						}
 
 						if (seriesLabels.length != 0)
@@ -241,6 +255,11 @@ mydigitalstructure._util.factory.chart = function (param)
 
 							app.show(legendContainerSelector, legendView.join(''));
 						}
+					}
+
+					if (legendText != '')
+					{
+						app.show(legendContainerSelector, legendText);
 					}
 
 					if (showAsPercentage)

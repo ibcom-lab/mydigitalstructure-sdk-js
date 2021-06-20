@@ -131,6 +131,7 @@ mydigitalstructure._util.view.handlers['myds-click'] = function (event)
 	var element = $(this);
 	var id = element.attr('id');
 	var controller = element.data('controller');
+	var scope = element.data('scope');
 	var disabled = element.hasClass('disabled');
 
 	if (element.hasClass('list-group-item'))
@@ -169,8 +170,14 @@ mydigitalstructure._util.view.handlers['myds-click'] = function (event)
 			app.data[controller] = _.assign(app.data[controller], data);
 
 			if (app.data[controller] == undefined) {app.data[controller] = {}}
-				
-			mydigitalstructure._util.controller.invoke({name: controller}, param)
+
+			if (scope != undefined)
+			{	
+				if (app.data[scope] == undefined) {app.data[scope] = {}};
+				app.data[scope] = _.assign(app.data[scope], data);
+			}
+
+			mydigitalstructure._util.controller.invoke({name: controller}, param);
 		}
 		else
 		{
@@ -187,9 +194,9 @@ mydigitalstructure._util.view.handlers['myds-click'] = function (event)
 
 					var data = mydigitalstructure._util.data.clean(element.data());
 					param.dataContext = data;
-					app.data[controller] = _.assign(app.data[controller], data);
+					app.data[id] = _.assign(app.data[id], data);
 
-					if (app.data[controller] == undefined) {app.data[controller] = {}}
+					if (app.data[id] == undefined) {app.data[id] = {}}
 					app.controller[id](param);
 				}
 			}
@@ -6382,6 +6389,18 @@ mydigitalstructure._util.factory.core = function (param)
 			code: function (param)
 			{
 				mydigitalstructure._util.menu.set(param);
+			}
+		},
+		{
+			name: 'util-view-button-set-active',
+			code: function (param)
+			{
+				var selector = mydigitalstructure._util.param.get(param, 'selector').value;
+				var element = $(selector);
+				if (!_.isEmpty(element))
+				{
+					element.addClass("active").siblings('.myds-button-group').removeClass("active");
+				}
 			}
 		},
 		{
