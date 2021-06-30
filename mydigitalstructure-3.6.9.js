@@ -2747,13 +2747,20 @@ mydigitalstructure._util =
 
 									     			keyData = String(data[key]);
 
+													if (_.isFunction(filterXSS))
+													{
+														keyData = filterXSS(keyData);
+													}
+
 									     			content = s.replaceAll(content, '{{' + key.toLowerCase() + '}}', keyData);
 									     			content = s.replaceAll(content, '{{' + key + '}}', keyData);
 
-									     			if (s != undefined)
+									     			/*
+													 if (s != undefined)
 									     			{
 									     				content = s.unescapeHTML(content)
 									     			}
+													 */
 
 									     			content = s.replaceAll(content, '{{~' + key.toLowerCase() + '}}', encodeURIComponent(keyData));
 									     			content = s.replaceAll(content, '{{~' + key + '}}', encodeURIComponent(keyData));
