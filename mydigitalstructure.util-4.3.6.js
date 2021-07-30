@@ -1841,10 +1841,17 @@ if (typeof $.fn.collapse == 'function')
 			app.data[scope].dataContext = $(event.target).data();
 		}
 
-        var refresh = ($(event.target).attr('data-refresh') == 'true')
+        var refresh = ($(event.target).attr('data-reset') == 'true')
         if (refresh)
         {
-            mydigitalstructure._util.view.refresh();
+            mydigitalstructure._util.view.refresh(
+			{
+				scope: scope,
+				reset: true,
+				resetNew: true,
+				resetScope: true,
+				resetScopeNew: true
+			});
         }
 
 		if (controller == undefined) {controller = id};
@@ -3207,6 +3214,7 @@ mydigitalstructure._util.view._refresh = function (param)
 	var collapse = mydigitalstructure._util.param.get(param, 'collapse').value;
 	var onlyIfVisible = mydigitalstructure._util.param.get(param, 'onlyIfVisible', {default: true}).value;
 	var reset = mydigitalstructure._util.param.get(param, 'reset', {default: false}).value;
+	var resetNew = mydigitalstructure._util.param.get(param, 'resetNew', {default: false}).value;
 	
 	var includeDates = mydigitalstructure._util.param.get(param, 'includeDates', {default: true}).value;
 
@@ -3386,7 +3394,13 @@ mydigitalstructure._util.view._refresh = function (param)
 	if (reset)
 	{
 		$('input[data-scope="' + scope + '"]').val('');
-		$('textarea[data-scope="' + scope + '"]').val('')
+		$('textarea[data-scope="' + scope + '"]').val('');
+	}
+
+	if (resetNew)
+	{
+		$('input[data-scope="' + scope + '-"]').val('');
+		$('textarea[data-scope="' + scope + '-"]').val('');
 	}
 
 	if (!_.isUndefined(show))
