@@ -3130,14 +3130,8 @@ mydigitalstructure._util =
 									data.registration_trial = param.trial || param.registration_trial;
 									data.registration_spacename = param.spacename || data.registration_spacename;
 									data.registration_memberships = param.memberships || data.registration_memberships;
-                                    data.registration_verification = param.verification || data.registration_verification;
-
-                                    if (data.registration_verification == undefined)
-                                    {
-                                        data.registration_verification = param.verificationcode
-                                    }
-
-                                    data.registration_verificationmessage = param.verificationmessage || data.registration_verificationmessage;
+                                    data.registration_verifycode = param.verifycode || data.registration_verifycode;
+                                    data.registration_verifymessage = param.verifymessage || data.registration_verifymessage;
                                     
 									data.contactperson_firstname = param.firstname || param.contactperson_firstname;
 									data.contactperson_surname = param.surname || param.contactperson_surname;
