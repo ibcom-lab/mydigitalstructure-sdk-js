@@ -7473,7 +7473,7 @@ mydigitalstructure._util.factory.core = function (param)
 								var _paging = app._util.data.get(
 								{
 									scope: 'util-view-table',
-									context: context
+									context: paramContext
 								});
 
 								if (_paging.currentPage != undefined)
