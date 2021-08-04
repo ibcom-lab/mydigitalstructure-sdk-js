@@ -7449,30 +7449,40 @@ mydigitalstructure._util.factory.core = function (param)
 
                     if (refresh)
                     {
-                        var _param = app._util.data.get(
-                        {
-                            scope: context,
-                            context: '_param'
-                        });
+						var paramContext = context;
 
-                        if (_param.sort != undefined) { _param.sorts = [_param.sort]}
+						if (paramContext == undefined && container != undefined)
+						{
+							paramContext = '_table-' + container;
+						}
 
-                        param = _.assign(_param, param)
+						if (paramContext != undefined)
+						{
+							var _param = app._util.data.get(
+							{
+								scope: paramContext,
+								context: '_param'
+							});
 
-                        if (goToPageNumber == undefined)
-                        {
-                            var _paging = app._util.data.get(
-                            {
-                                scope: 'util-view-table',
-                                context: context
-                            });
+							if (_param.sort != undefined) { _param.sorts = [_param.sort]}
 
-                            if (_paging.currentPage != undefined)
-                            {
-                                goToPageNumber = _paging.currentPage;
-                                param.goToPageNumber = _paging.currentPage;
-                            }
-                        }
+							param = _.assign(_param, param)
+
+							if (goToPageNumber == undefined)
+							{
+								var _paging = app._util.data.get(
+								{
+									scope: 'util-view-table',
+									context: context
+								});
+
+								if (_paging.currentPage != undefined)
+								{
+									goToPageNumber = _paging.currentPage;
+									param.goToPageNumber = _paging.currentPage;
+								}
+                       		}
+						}
                     }
 
 					var callback = mydigitalstructure._util.param.get(param, 'callback', {default: 'util-view-table'}).value;
