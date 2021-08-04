@@ -7464,9 +7464,11 @@ mydigitalstructure._util.factory.core = function (param)
 								context: '_param'
 							});
 
-							if (_param.sort != undefined) { _param.sorts = [_param.sort]}
-
-							param = _.assign(_param, param)
+							if (_param != undefined)
+							{
+								if (_param.sort != undefined) { _param.sorts = [_param.sort]}
+								param = _.assign(_param, param)
+							}
 
 							if (goToPageNumber == undefined)
 							{
@@ -7476,10 +7478,13 @@ mydigitalstructure._util.factory.core = function (param)
 									context: refreshContext
 								});
 
-								if (_paging.currentPage != undefined)
+								if (_param != undefined)
 								{
-									goToPageNumber = _paging.currentPage;
-									param.goToPageNumber = _paging.currentPage;
+									if (_paging.currentPage != undefined)
+									{
+										goToPageNumber = _paging.currentPage;
+										param.goToPageNumber = _paging.currentPage;
+									}
 								}
                        		}
 						}
