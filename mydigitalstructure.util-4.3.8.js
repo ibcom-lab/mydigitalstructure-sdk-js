@@ -7449,18 +7449,18 @@ mydigitalstructure._util.factory.core = function (param)
 
                     if (refresh)
                     {
-						var paramContext = context;
+						var refreshContext = context;
 
-						if (paramContext == undefined && container != undefined)
+						if (refreshContext == undefined && container != undefined)
 						{
-							paramContext = '_table-' + container;
+							refreshContext = '_table-' + container;
 						}
 
-						if (paramContext != undefined)
+						if (refreshContext != undefined)
 						{
 							var _param = app._util.data.get(
 							{
-								scope: paramContext,
+								scope: refreshContext,
 								context: '_param'
 							});
 
@@ -7473,7 +7473,7 @@ mydigitalstructure._util.factory.core = function (param)
 								var _paging = app._util.data.get(
 								{
 									scope: 'util-view-table',
-									context: paramContext
+									context: refreshContext
 								});
 
 								if (_paging.currentPage != undefined)
