@@ -7489,6 +7489,21 @@ mydigitalstructure._util.factory.core = function (param)
                        		}
 						}
                     }
+					else
+					{
+						var clearContext = context;
+
+						if (clearContext == undefined && container != undefined)
+						{
+							clearContext = '_table-' + container;
+						}
+
+						app._util.data.clear(
+						{
+							scope: 'util-view-table',
+							context: clearContext
+						});
+					}
 
 					var callback = mydigitalstructure._util.param.get(param, 'callback', {default: 'util-view-table'}).value;
 					var format = mydigitalstructure._util.param.get(param, 'format').value;
