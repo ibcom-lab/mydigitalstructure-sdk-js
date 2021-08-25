@@ -1215,7 +1215,8 @@ mydigitalstructure._util.factory.security = function (param)
                     {
                         qrurl: response.qrurl,
                         manualentrycode: response.manualentrycode,
-                        uuid: app.invoke('util-uuid')
+                        uuid: app.invoke('util-uuid'),
+						issuer: issuer
                     };
                    
                     app.set(
@@ -1304,16 +1305,16 @@ mydigitalstructure._util.factory.security = function (param)
                     if (user['user.contactperson.mobile'] != '')
                     {
                         app.vq.add('<button type="button" class="btn btn-default btn-outline btn-sm myds-click" data-controller="util-security-totp-send-sms" ' +
-                                    ' id="util-security-totp-send-sms" data-token-uuid="' + token.uuid + '" data-spinner="prepend">Send as SMS</button>' + 
-                                    '<div class="text-muted text-center small mb-3">' +
+                                    ' id="util-security-totp-send-sms" data-tokenuuid="' + token.uuid + '" data-spinner="prepend">Send as SMS</button>' + 
+                                    '<div class="text-muted text-center small mt-1 mb-2">' +
                                     user['user.contactperson.mobile'] + '</div>');
                     }
     
                     if (user['user.contactperson.email'] != '')
                     {
                         app.vq.add('<button type="button" class="btn btn-default btn-outline btn-sm myds-click" data-controller="util-security-totp-send-email" ' +
-                                    ' id="util-security-totp-send-email" data-token-uuid="' + token.uuid + '" data-spinner="prepend">Send as Email</button>' + 
-                                    '<div class="text-muted text-center small mb-3">' +
+                                    ' id="util-security-totp-send-email" data-tokenuuid="' + token.uuid + '" data-spinner="prepend">Send as Email</button>' + 
+                                    '<div class="text-muted text-center small mt-1 mb-2">' +
                                     user['user.contactperson.email'] + '</div>');
                     }
     
@@ -1335,47 +1336,51 @@ mydigitalstructure._util.factory.security = function (param)
                     scope: 'util-security-totp-init',
                     context: 'user'
                 });
-    
-                var totpCode = app.get(
-                {
-                    scope: 'util-security-totp-init',
-                    context: 'code'
-                });
-    
-                var message = 
-                    'Hello ' + user['user.contactperson.firstname'] + ', ' +
-                            'please open your TOTP Client (eg Google Authenticator, authy), select add new account and enter the following key manually (copy & paste): ' +
-                                totpCode.manualentrycode
-    
-                var data =
-                {
-                    contactperson: user['user.contactperson.id'],
-                    message: message,
-                    signature: ' - thank you, beHub'
-                }
-    
-                mydigitalstructure.cloud.invoke(
-                {
-                    method: 'messaging_sms_send',
-                    data: data,
-                    callbackIncludeResponse: true,
-                    callback: function (param, response)
-                    {
-                        app.invoke('util-view-spinner-remove',
-                        {
-                            controller: 'util-security-totp-send-sms'
-                        });
-    
-                        if (response.status == 'OK')
-                        {
-                            app.notify('SMS Sent')
-                        }
-                        else
-                        {
-                            app.notify({message: 'SMS could not be sent!', type: 'error'})
-                        }
-                    }	
-                });
+
+				var tokenUUID = app._util.param.get(param.dataContext, 'tokenuuid').value;
+
+				var token = app.get(
+				{
+					scope: tokenUUID
+				});
+
+				if (token != undefined)
+				{
+					var message = 
+						'Hello ' + user['user.contactperson.firstname'] + ', ' +
+								'please open your TOTP Client (eg Google Authenticator, authy), select add new account and enter the following key manually (copy & paste): ' +
+									token.manualentrycode
+		
+					var data =
+					{
+						contactperson: user['user.contactperson.id'],
+						message: message,
+						signature: ' - thank you, ' + token.issuer
+					}
+		
+					mydigitalstructure.cloud.invoke(
+					{
+						method: 'messaging_sms_send',
+						data: data,
+						callbackIncludeResponse: true,
+						callback: function (param, response)
+						{
+							app.invoke('util-view-spinner-remove',
+							{
+								controller: 'util-security-totp-send-sms'
+							});
+		
+							if (response.status == 'OK')
+							{
+								app.notify('SMS Sent')
+							}
+							else
+							{
+								app.notify({message: 'SMS could not be sent!', type: 'error'})
+							}
+						}	
+					});
+				}
             }
         },
         {
@@ -1387,68 +1392,72 @@ mydigitalstructure._util.factory.security = function (param)
                     scope: 'util-security-totp-init',
                     context: 'user'
                 });
-    
-                var totpCode = app.get(
-                {
-                    scope: 'util-security-totp-init',
-                    context: 'code'
-                });
-    
-                var message =
-                    '<p>Hello ' + user['user.contactperson.firstname'] + ',</p>' +
-                    '<p>Please open your TOTP Client (eg Google Authenticator, authy), select add new account and enter the following key manually (copy & paste):</p>' +
-                    '<p>' + totpCode.manualentrycode + '</p>' +
-                    '<p><b>OR</b> scan the following QR code:</p>' +
-                    '<p><img style="width:200px;" src="' + totpCode.qrurl + '">' +
-                    '<p>Thank you,</p>' +
-                    '<p>beHub</p>';
-    
-                var fromEmail;
-    
-                if (_.has(app.whoami().buildingMe.options, 'email.from'))
-                {
-                    fromEmail = app.whoami().buildingMe.options.email.from;
-                } 
-    
-                if (fromEmail == undefined)
-                {
-                    app.notify({message: 'No from email set up!', type: 'error'});
-                }
-                else
-                {
-                    var data = 
-                    {
-                        subject: 'beHub TOTP Client Set Up',
-                        message: message,
-                        to: user['user.contactperson.id'],
-                        send: 'Y',
-                        applysystemtemplate: 'Y',
-                        fromemail: app.whoami().buildingMe.options.email.from
-                    }
-    
-                    mydigitalstructure.cloud.invoke(
-                    {
-                        method: 'messaging_email_send',
-                        data: data,
-                        callbackIncludeResponse: true,
-                        callback: function (param, response)
-                        {
-                            app.invoke('util-view-spinner-remove',
-                            {
-                                controller: 'util-security-totp-send-email'
-                            });
-    
-                            if (response.status == 'OK')
-                            {
-                                app.notify('Email Sent')
-                            }
-                            else
-                            {
-                                app.notify({message: 'Email could not be sent!', type: 'error'})
-                            }
-                        }
-                    });
-                }
+
+				var tokenUUID = app._util.param.get(param.dataContext, 'tokenuuid').value;
+
+				var token = app.get(
+				{
+					scope: tokenUUID
+				});
+
+				if (token != undefined)
+				{
+					var message =
+						'<p>Hello ' + user['user.contactperson.firstname'] + ',</p>' +
+						'<p>Please open your TOTP Client (eg Google Authenticator, authy), select add new account and enter the following key manually (copy & paste):</p>' +
+						'<p>' + token.manualentrycode + '</p>' +
+						'<p><b>OR</b> scan the following QR code:</p>' +
+						'<p><img style="width:200px;" src="' + token.qrurl + '">' +
+						'<p>Thank you,</p>' +
+						'<p>' + token.issuer + '</p>';
+		
+					var fromEmail;
+		
+					if (_.has(app.whoami().buildingMe.options, 'email.from'))
+					{
+						fromEmail = app.whoami().buildingMe.options.email.from;
+					} 
+		
+					if (fromEmail == undefined)
+					{
+						app.notify({message: 'No from email set up!', type: 'error'});
+					}
+					else
+					{
+						var data = 
+						{
+							subject: token.issuer + ' TOTP Client Set Up',
+							message: message,
+							to: user['user.contactperson.id'],
+							send: 'Y',
+							applysystemtemplate: 'Y',
+							fromemail: app.whoami().buildingMe.options.email.from
+						}
+		
+						mydigitalstructure.cloud.invoke(
+						{
+							method: 'messaging_email_send',
+							data: data,
+							callbackIncludeResponse: true,
+							callback: function (param, response)
+							{
+								app.invoke('util-view-spinner-remove',
+								{
+									controller: 'util-security-totp-send-email'
+								});
+		
+								if (response.status == 'OK')
+								{
+									app.notify('Email Sent')
+								}
+								else
+								{
+									app.notify({message: 'Email could not be sent!', type: 'error'})
+								}
+							}
+						});
+					}
+				}
             }
         }
     ]);	
