@@ -399,32 +399,77 @@ mydigitalstructure._create = function (param)
 	}
 
 	var endpoint = param.object.split('_')[0];
+	var send = true;
 
-    var isStructureObject = (_.contains(param.object, ' ') || _.startsWith('_'))
+	if (_.contains(param.object, ' '))
+	{
+		param.object = '_' + _.snakeCase(param.object)
+	}
 
-    if (isStructureObject)
+    if (_.startsWith(param.object, '_'))
     {
-        mydigitalstructure._util.structures.save(param)
+		if (param.data == undefined) {param.data = {}}
+
+		if (param.data.objectcontext == undefined)
+		{
+			param.data.object = 41;
+
+			if (param.data.id != undefined)
+			{
+				param.data.objectcontext = param.data.id;
+			}
+
+			var structure = _.find(mydigitalstructure._scope.data.structures, function (structure)
+			{
+				return structure._alias == param.object
+			});
+
+			if (structure == undefined)
+			{
+				send = false;
+			}
+			else
+			{
+				param.data.structure = structure.id
+			}
+		}
+
+		/*
+		mydigitalstructure.cloud.save(
+		{
+			object: '_test_1'
+			fields:
+			{
+				_field1: 'A',
+				_field2: 'B'
+			}
+		})
+		*/
     }
-    else
-    {
-        mydigitalstructure._util.send(
-        {
-            object: param.object,
-            data: param.data,
-            callback: param.callback,
-            callbackParam: param.callbackParam,
-            callbackIncludeResponse: param.callbackIncludeResponse,
-            mode: param.mode,
-            type: 'POST',
-            url: '/rpc/' + endpoint + '/?method=' + (param.object).toUpperCase() + '_MANAGE',
-            manageErrors: param.manageErrors,
-            managed: param.managed,
-            notify: param.notify,
-            set: param.set,
-            datareturn: param.responseFields
-        });
-    }
+
+	if (!send)
+	{
+		console.log('!!ERROR; Bad object; ' + param.object)
+	}
+	else
+	{
+		mydigitalstructure._util.send(
+		{
+			object: param.object,
+			data: param.data,
+			callback: param.callback,
+			callbackParam: param.callbackParam,
+			callbackIncludeResponse: param.callbackIncludeResponse,
+			mode: param.mode,
+			type: 'POST',
+			url: '/rpc/' + endpoint + '/?method=' + (param.object).toUpperCase() + '_MANAGE',
+			manageErrors: param.manageErrors,
+			managed: param.managed,
+			notify: param.notify,
+			set: param.set,
+			datareturn: param.responseFields
+		});
+	}
 }
 
 mydigitalstructure.update = mydigitalstructure.create;
@@ -3744,35 +3789,19 @@ mydigitalstructure._util =
                                 }
                                 else
                                 {
-                                    mydigitalstructure._scope.data.structures = response.data.rows
-                                }
-							},
+                                    mydigitalstructure._scope.data.structures = response.data.rows;
 
-                    save:   function (param)
-                            {
-                                //See the lab conversation for STRUCTURE_DATA_AS_OBJECT_MANAGE.
-                                //Change this when available
-                            
-                                var isStructureObject = (_.contains(param.object, ' ') || _.startsWith('_'))
-                            
-                                if (isStructureObject)
-                                {
-                                    if (mydigitalstructure._scope.data._structures != undefined)
-                                    {
-                                        var structure = _.find(mydigitalstructure._scope.data._structures, function (structure)
-                                        {
-                                            structure._object = param.object
-                                        });
-                            
-                                        if (structure != undefined)
-                                        {
-                                            param.object = 'structure_data_value'
-                                        }
-                            
-                                        //repeat for each field.
-                                    }
+									_.each(mydigitalstructure._scope.data.structures, function (structure)
+									{
+										structure.alias = _.snakeCase(structure.title);
+
+										if (!_.startsWith(structure.alias, '_'))
+										{
+											structure.alias = '_' + structure.alias
+										}
+									});
                                 }
-                            }
+							}
                 },	
 
 	attachment:
