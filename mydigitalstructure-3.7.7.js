@@ -155,7 +155,7 @@ mydigitalstructure.init = function (data)
                 {
                     from: 'myds-core',
                     status: 'error',
-                    message: 'There is an error communicating with the cloud service. Try re-openning the website.'
+                    message: 'There is an error communicating with the cloud service. Try re-opening the website.'
                 });
             }
         }
@@ -398,16 +398,22 @@ mydigitalstructure._create = function (param)
 		param.data = param.fields;
 	}
 
-	var endpoint = param.object.split('_')[0];
 	var send = true;
-
-	if (_.contains(param.object, ' '))
-	{
-		param.object = '_' + _.snakeCase(param.object)
-	}
 
     if (_.startsWith(param.object, '_'))
     {
+		/*
+		mydigitalstructure.cloud.save(
+		{
+			object: '_test_1',
+			fields:
+			{
+				_field1: 'A',
+				_field2: '1'
+			}
+		})
+		*/
+
 		if (param.data == undefined) {param.data = {}}
 
 		if (param.data.objectcontext == undefined)
@@ -421,7 +427,7 @@ mydigitalstructure._create = function (param)
 
 			var structure = _.find(mydigitalstructure._scope.data.structures, function (structure)
 			{
-				return structure._alias == param.object
+				return structure.alias == param.object
 			});
 
 			if (structure == undefined)
@@ -430,21 +436,16 @@ mydigitalstructure._create = function (param)
 			}
 			else
 			{
-				param.data.structure = structure.id
+				param.data.structure = structure.id;
+
+				if (param.data.title == undefined)
+				{
+					param.data.title = structure.title + ' [' + moment().format('DD MMM YYYY HH:mm:ss') + ']'
+				}
+
+				param.object = 'structure_data';
 			}
 		}
-
-		/*
-		mydigitalstructure.cloud.save(
-		{
-			object: '_test_1'
-			fields:
-			{
-				_field1: 'A',
-				_field2: 'B'
-			}
-		})
-		*/
     }
 
 	if (!send)
@@ -453,6 +454,8 @@ mydigitalstructure._create = function (param)
 	}
 	else
 	{
+		var endpoint = param.object.split('_')[0];
+
 		mydigitalstructure._util.send(
 		{
 			object: param.object,
@@ -542,8 +545,6 @@ mydigitalstructure.retrieve = function (param)
 	}
 	else
 	{
-		param.endpoint = param.object.split('_')[0];	
-
 		if (typeof param.data == 'string')
 		{
 			var id = param.data;
@@ -829,16 +830,92 @@ mydigitalstructure.retrieve = function (param)
 			}
 		}
 
-		param.type = 'POST';
-		param.url = '/rpc/' + param.endpoint + '/?method=' + (param.object).toUpperCase() + '_SEARCH';
-		param.notify = param.notify;
+		var send = true;
 
-		if (_.has(param.data, '_controller'))
+		if (_.startsWith(param.object, '_'))
 		{
-			param.data._controller = param.object + ':' + JSON.stringify(param.data.criteria.fields);
+			/*
+			mydigitalstructure.cloud.search(
+			{
+				object: '_test_1',
+				fields:
+				[
+					'_field1',
+					'_field2'
+				],
+				filters:
+				[
+					{
+						field: '_field1',
+						value: 'A'
+					}
+				]
+
+			})
+			*/
+
+			if (param.data.objectcontext == undefined)
+			{
+				var structure = _.find(mydigitalstructure._scope.data.structures, function (structure)
+				{
+					return structure.alias == param.object
+				});
+
+				if (structure == undefined)
+				{
+					send = false;
+				}
+				else
+				{
+					if (param.data.criteria.filters == undefined) {param.data.criteria.filters = []}
+					
+					param.data.criteria.filters.push(
+					{
+						name: 'structure',
+						comparison: 'EQUAL_TO',
+						value: structure.id
+					});
+
+					param.data.criteria.filters.push(
+					{
+						name: 'object',
+						comparison: 'EQUAL_TO',
+						value: '41'
+					});
+
+					var idFilter = _.find(param.data.criteria.filters, function(filter)
+					{
+						return filter.name == 'id'
+					});
+
+					if (idFilter != undefined)
+					{
+						idFilter.name = 'objectcontext'
+					}
+
+					param.object = 'structure_data';
+				}
+			}
 		}
 
-		mydigitalstructure._util.send(param);
+		if (!send)
+		{
+			console.log('!!ERROR; Bad object; ' + param.object)
+		}
+		else
+		{
+			param.endpoint = param.object.split('_')[0];
+			param.type = 'POST';
+			param.url = '/rpc/' + param.endpoint + '/?method=' + (param.object).toUpperCase() + '_SEARCH';
+			param.notify = param.notify;
+
+			if (_.has(param.data, '_controller'))
+			{
+				param.data._controller = param.object + ':' + JSON.stringify(param.data.criteria.fields);
+			}
+
+			mydigitalstructure._util.send(param);
+		}
 	}
 }
 
