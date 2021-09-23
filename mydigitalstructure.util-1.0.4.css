@@ -1,0 +1,19 @@
+.myds-dropdown, .myds-list
+{
+  cursor: pointer;
+}
+
+.myds-page-view
+{
+	width : 100%;
+}
+
+.myds-validate-error
+{
+	border-color: red;
+}
+
+.myds-space-switched-in
+{
+	color: red;
+}

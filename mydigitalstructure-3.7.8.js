@@ -1024,9 +1024,17 @@ mydigitalstructure.options = function (param)
 
 mydigitalstructure.space =
 {
+    whoAmI: function (param)
+    {
+        var returnData = mydigitalstructure._scope.space;
+        returnData.isSwitched = mydigitalstructure.space.isSwitched()
+
+		return returnData
+	},
+
 	isSwitched: function (param)
     {
-		return !(mydigitalstructure._scope.space.id == mydigitalstructure._scope.user.space)
+		return !(mydigitalstructure._scope.space.contactbusiness == mydigitalstructure._scope.user.contactbusiness)
 	},
 
     switchInto: function (param, response)
@@ -1104,9 +1112,9 @@ mydigitalstructure.space =
                 mydigitalstructure._scope.space =
                 {
                     id: mydigitalstructure._scope.user.space,
-                    name: mydigitalstructure._scope.user.spacename,
-                    contactbusiness: mydigitalstructure._scope.user.spacecontactbusiness,
-                    contactperson: mydigitalstructure._scope.user.spacecontactperson,
+                    name: mydigitalstructure._scope.user.contactbusinesstext,
+                    contactbusiness: mydigitalstructure._scope.user.contactbusiness,
+                    contactperson: mydigitalstructure._scope.user.contactperson,
                     user: mydigitalstructure._scope.user.id,
                     roles: mydigitalstructure._scope.user.roles.rows
                 }
@@ -1117,6 +1125,8 @@ mydigitalstructure.space =
                     status: 'switched-back',
                     message: mydigitalstructure._scope.space.name
                 });
+
+                mydigitalstructure._util.onComplete(param);
             }
         }
     }
