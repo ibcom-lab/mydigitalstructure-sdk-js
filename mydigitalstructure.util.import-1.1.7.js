@@ -1107,6 +1107,13 @@ mydigitalstructure._util.factory.import = function (param)
 			}
 			else
 			{
+				app.set(
+				{
+					scope: 'util-import-initialise-storage',
+					context: 'storageIndex',
+					value: 0
+				});
+
 				var callback = mydigitalstructure._util.param.get(param, 'callback', {default: 'util-import-process'}).value;
 
 				app.invoke(callback, param)
