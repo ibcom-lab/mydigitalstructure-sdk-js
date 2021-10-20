@@ -8,7 +8,7 @@
 
 mydigitalstructure._util.factory.search = function (param)
 {
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-initialise',
 		code: function (param)
@@ -161,7 +161,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-show',
 		code: function (param)
@@ -686,7 +686,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-process',
 		code: function (param)
@@ -875,7 +875,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-export',
 		code: function (param)
@@ -888,7 +888,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-export-as-is',
 		code: function (param)
@@ -913,7 +913,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-select-init',
 		code: function (param)
@@ -960,7 +960,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-select-process',
 		code: function (param)
@@ -1103,7 +1103,7 @@ mydigitalstructure._util.factory.search = function (param)
 		}
 	});
 
-	app.add(
+	mydigitalstructure._util.controller.add(
 	{
 		name: 'util-view-search-chart-render',
 		code: function (param, rows)
@@ -1344,4 +1344,40 @@ mydigitalstructure._util.factory.search = function (param)
 			}
 		}
 	});
+
+    mydigitalstructure._util.controller.add(
+    {
+        name: 'util-view-search-get-filters',
+        code: function (param)
+        {
+            var userFilters = app.get({scope: 'util-view-search-user-filter'});
+            var search = app.get(
+            {
+                scope: 'util-view-search-show',
+                context: 'search'
+            });
+    
+            var searchFilters = [];
+    
+            _.each(userFilters, function (userFilterValue, userFilterName)
+            {
+                var userFilter = _.find(search.userFilters, function (userFilter)
+                {
+                    return userFilter.name == userFilterName
+                });
+    
+                if (_.has(userFilter, 'storage'))
+                {
+                    searchFilters.push(
+                    {
+                        field: userFilter.storage.field,
+                        comparison: userFilter.storage.comparison,
+                        value: userFilterValue
+                    })
+                }
+            });
+    
+            return searchFilters;
+        }
+    }); 
 }
