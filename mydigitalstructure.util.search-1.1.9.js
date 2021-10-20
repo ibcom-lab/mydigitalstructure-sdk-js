@@ -810,11 +810,11 @@ mydigitalstructure._util.factory.search = function (param)
 		              		if (searchUserFilterValue != undefined)
 		              		{
 		              			if (userFilter.type == 'text')
-									{
+								{
 		              				userFilter.value = searchUserFilterValue.text;
 		              			}
 		              			else if (userFilter.type == 'date')
-									{
+								{
 		              				userFilter.value = searchUserFilterValue.date;
 		              			}
 		              			else
@@ -857,6 +857,56 @@ mydigitalstructure._util.factory.search = function (param)
 
 									filters.push(userFilter._filters)
 								}
+							}
+
+                            if (userFilter.filters != undefined)
+							{	
+                                _.each(userFilter.filters, function (filter)
+                                {
+                                    if (filter.field != undefined
+                                            && userFilter.value != undefined
+                                            && userFilter.value != ''
+                                            && userFilter.value != 'undefined')
+                                    {
+                                        if (filter.comparison == undefined)
+                                        {
+                                            if (userFilter.type == 'text')
+                                            {
+                                                filter.comparison = 'TEXT_IS_LIKE';
+                                            }
+                                            else
+                                            {
+                                                filter.comparison = 'EQUAL_TO';
+                                            }
+                                        }
+
+                                        var _filter =
+                                        {
+                                            field: filter.field,
+                                            comparison: filter.comparison
+                                        }
+
+                                        if (filter.comparision != 'IS_NULL')
+                                        {
+                                            _filter.value = userFilter.value
+                                        }
+
+                                        if (filter.controller != undefined)
+                                        {
+                                            app.invoke(filter.controller, userFilter, _filter);
+                                        }
+
+                                        filters.push(_filter)
+                                    }
+
+                                    if (filter.name != undefined 
+                                        && userFilter.value != undefined
+                                        && userFilter.value != ''
+                                        && userFilter.value != 'undefined')
+                                    {
+                                        filters.push(filter)
+                                    }
+                                });
 							}
 						});
 					}
