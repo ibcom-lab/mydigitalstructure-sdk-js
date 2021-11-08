@@ -4668,7 +4668,7 @@ mydigitalstructure._util.data =
 						context: dataContext
 					});
 					
-					if (data != undefined && id != undefined)
+					if (data != undefined && _.isSet(id))
 					{
 						var _id = id;
 							

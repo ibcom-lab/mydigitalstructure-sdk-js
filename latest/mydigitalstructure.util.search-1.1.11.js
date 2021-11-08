@@ -807,22 +807,22 @@ mydigitalstructure._util.factory.search = function (param)
 							{
 								searchUserFilterValue = _.find(search._userFilterValues, function (userFilterValue) {return userFilterValue.name == userFilter.name});
 
-		              		if (searchUserFilterValue != undefined)
-		              		{
-		              			if (userFilter.type == 'text')
-								{
-		              				userFilter.value = searchUserFilterValue.text;
-		              			}
-		              			else if (userFilter.type == 'date')
-								{
-		              				userFilter.value = searchUserFilterValue.date;
-		              			}
-		              			else
-		              			{
-		              				userFilter.value = searchUserFilterValue.id;
-		              			}
-		              		}
-		              	}
+                                if (searchUserFilterValue != undefined)
+                                {
+                                    if (userFilter.type == 'text')
+                                    {
+                                        userFilter.value = searchUserFilterValue.text;
+                                    }
+                                    else if (userFilter.type == 'date')
+                                    {
+                                        userFilter.value = searchUserFilterValue.date;
+                                    }
+                                    else
+                                    {
+                                        userFilter.value = searchUserFilterValue.id;
+                                    }
+                                }
+                            }
 
 							if (userFilter.storage != undefined)
 							{	
@@ -831,84 +831,90 @@ mydigitalstructure._util.factory.search = function (param)
 										&& userFilter.value != ''
 										&& userFilter.value != 'undefined')
 								{
-									if (userFilter.storage.comparison == undefined)
-									{
-										if (userFilter.type == 'text')
-										{
-											userFilter.storage.comparison = 'TEXT_IS_LIKE';
-										}
-										else
-										{
-											userFilter.storage.comparison = 'EQUAL_TO';
-										}
-									}
-
-									userFilter._filters =
-									{
-										field: userFilter.storage.field,
-										comparison: userFilter.storage.comparison,
-										value: userFilter.value
-									}
-
-									if (userFilter.controller != undefined)
-									{
-										app.invoke(userFilter.controller, userFilter, filters);
-									}
-                                    else
+                                    if (userFilter.storage.object == undefined || userFilter.storage.object == search.object)
                                     {
-                                        filters.push(userFilter._filters)
+                                        if (userFilter.storage.comparison == undefined)
+                                        {
+                                            if (userFilter.type == 'text')
+                                            {
+                                                userFilter.storage.comparison = 'TEXT_IS_LIKE';
+                                            }
+                                            else
+                                            {
+                                                userFilter.storage.comparison = 'EQUAL_TO';
+                                            }
+                                        }
+
+                                        userFilter._filters =
+                                        {
+                                            field: userFilter.storage.field,
+                                            comparison: userFilter.storage.comparison,
+                                            value: userFilter.value
+                                        }
+
+                                        if (userFilter.controller != undefined)
+                                        {
+                                            app.invoke(userFilter.controller, userFilter, filters);
+                                        }
+                                        else
+                                        {
+                                            filters.push(userFilter._filters)
+                                        }
                                     }
 								}
 							}
 
                             if (userFilter.filters != undefined)
 							{	
-                                _.each(userFilter.filters, function (filter)
+                                if (userFilter.object == undefined || userFilter.object == search.object)
                                 {
-                                    if (filter.field != undefined
+                                    _.each(userFilter.filters, function (filter)
+                                    {
+                                        if (filter.field != undefined
+                                                && userFilter.value != undefined
+                                                && userFilter.value != ''
+                                                && userFilter.value != 'undefined')
+                                        {
+                                            if (filter.comparison == undefined)
+                                            {
+                                                if (userFilter.type == 'text')
+                                                {
+                                                    filter.comparison = 'TEXT_IS_LIKE';
+                                                }
+                                                else
+                                                {
+                                                    filter.comparison = 'EQUAL_TO';
+                                                }
+                                            }
+
+                                            var _filter =
+                                            {
+                                                field: filter.field,
+                                                comparison: filter.comparison
+                                            }
+
+                                            if (filter.comparision != 'IS_NULL')
+                                            {
+                                                _filter.value = userFilter.value
+                                            }
+
+                                            if (filter.controller != undefined)
+                                            {
+                                                app.invoke(filter.controller, userFilter, _filter);
+                                            }
+
+                                            filters.push(_filter)
+                                        }
+
+                                        if (filter.name != undefined 
                                             && userFilter.value != undefined
                                             && userFilter.value != ''
                                             && userFilter.value != 'undefined')
-                                    {
-                                        if (filter.comparison == undefined)
                                         {
-                                            if (userFilter.type == 'text')
-                                            {
-                                                filter.comparison = 'TEXT_IS_LIKE';
-                                            }
-                                            else
-                                            {
-                                                filter.comparison = 'EQUAL_TO';
-                                            }
+                                            filters.push(filter)
                                         }
-
-                                        var _filter =
-                                        {
-                                            field: filter.field,
-                                            comparison: filter.comparison
-                                        }
-
-                                        if (filter.comparision != 'IS_NULL')
-                                        {
-                                            _filter.value = userFilter.value
-                                        }
-
-                                        if (filter.controller != undefined)
-                                        {
-                                            app.invoke(filter.controller, userFilter, _filter);
-                                        }
-
-                                        filters.push(_filter)
-                                    }
-
-                                    if (filter.name != undefined 
-                                        && userFilter.value != undefined
-                                        && userFilter.value != ''
-                                        && userFilter.value != 'undefined')
-                                    {
-                                        filters.push(filter)
-                                    }
-                                });
+                                    });
+                                }
 							}
 						});
 					}
@@ -1402,12 +1408,14 @@ mydigitalstructure._util.factory.search = function (param)
         name: 'util-view-search-get-filters',
         code: function (param)
         {
-            var userFilters = app.get({scope: 'util-view-search-user-filter'});
-            var search = app.get(
+            var userFilters = mydigitalstructure._util.data.get({scope: 'util-view-search-user-filter'});
+            var search = mydigitalstructure._util.data.get(
             {
                 scope: 'util-view-search-show',
                 context: 'search'
             });
+
+            var object = mydigitalstructure._util.param.get(param, 'object').value;
     
             var searchFilters = [];
     
@@ -1420,12 +1428,71 @@ mydigitalstructure._util.factory.search = function (param)
     
                 if (_.has(userFilter, 'storage'))
                 {
-                    searchFilters.push(
+                    if (userFilter.storage.object == undefined || userFilter.storage.object == object)
                     {
-                        field: userFilter.storage.field,
-                        comparison: userFilter.storage.comparison,
-                        value: userFilterValue
-                    })
+                        searchFilters.push(
+                        {
+                            field: userFilter.storage.field,
+                            comparison: userFilter.storage.comparison,
+                            value: userFilterValue
+                        });
+                    }
+                }
+
+                if (_.has(userFilter, 'filters'))
+                {	
+                    if (userFilter.object == undefined || userFilter.object == object)
+                    {
+                        _.each(userFilter.filters, function (filter)
+                        {
+                            // && userFilter.value != undefined
+                            //&& userFilter.value != ''
+                            //&& userFilter.value != 'undefined'
+
+                            if (filter.field != undefined)
+                            {
+                                if (filter.comparison == undefined)
+                                {
+                                    if (userFilter.type == 'text')
+                                    {
+                                        filter.comparison = 'TEXT_IS_LIKE';
+                                    }
+                                    else
+                                    {
+                                        filter.comparison = 'EQUAL_TO';
+                                    }
+                                }
+
+                                var _filter =
+                                {
+                                    field: filter.field,
+                                    comparison: filter.comparison
+                                }
+
+                                if (filter.comparision != 'IS_NULL')
+                                {
+                                    _filter.value = userFilterValue
+                                }
+
+                                if (filter.controller != undefined)
+                                {
+                                    app.invoke(filter.controller, userFilter, _filter);
+                                }
+
+                                searchFilters.push(_filter)
+                            }
+
+                            /*if (filter.name != undefined 
+                                && userFilter.value != undefined
+                                && userFilter.value != ''
+                                && userFilter.value != 'undefined')
+                            */
+                            if (filter.name != undefined)
+                            {
+                                searchFilters.push(filter)
+                            }
+                        });
+                    }
                 }
             });
     
