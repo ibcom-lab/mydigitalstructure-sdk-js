@@ -1137,6 +1137,7 @@ mydigitalstructure._util.factory.security = function (param)
                 var id = app._util.param.get(param, 'id').value;
                 var user = app._util.param.get(param, 'user', {default: app.whoami().thisInstanceOfMe.user});
                 if (id == undefined && user != undefined) {id = user.id}
+                if (id == undefined && param.dataContext != undefined) {id = param.dataContext.id}
 
                 if (id == undefined)
                 {

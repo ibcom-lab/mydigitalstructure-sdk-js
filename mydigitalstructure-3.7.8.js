@@ -416,36 +416,7 @@ mydigitalstructure._create = function (param)
 
 		if (param.data == undefined) {param.data = {}}
 
-		if (param.data.objectcontext == undefined)
-		{
-			param.data.object = 41;
-
-			if (param.data.id != undefined)
-			{
-				param.data.objectcontext = param.data.id;
-			}
-
-			var structure = _.find(mydigitalstructure._scope.data.structures, function (structure)
-			{
-				return structure.alias == param.object
-			});
-
-			if (structure == undefined)
-			{
-				send = false;
-			}
-			else
-			{
-				param.data.structure = structure.id;
-
-				if (param.data.title == undefined)
-				{
-					param.data.title = structure.title + ' [' + moment().format('DD MMM YYYY HH:mm:ss') + ']'
-				}
-
-				param.object = 'structure_data';
-			}
-		}
+		
     }
 
 	if (!send)
