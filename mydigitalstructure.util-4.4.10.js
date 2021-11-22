@@ -5135,6 +5135,41 @@ mydigitalstructure._util.menu =
 				}
 			}
 		}
+		else if (element.length != 0 )
+		{
+			//$('.myds-menu').find('li').not(element.parents('li')).removeClass('active');
+			$('.myds-menu').find('li').removeClass('active');
+
+			if (element.attr('href') != '#')
+			{
+				element.parent().addClass('active');
+
+				if ($(element).parents('div.myds-menu-group').length == 0)
+				{
+					element.parent().siblings().find('div.myds-menu-group').removeClass('show');
+				}
+				else
+				{
+					element.parents('div.myds-menu-group').addClass('show');
+					/*_.each(['second', 'third'], function(numberLevel)
+					{
+						var parentElement = $(element).parents('ul.nav-' + numberLevel + '-level');
+						if (!parentElement.parent().hasClass('active'))
+						{
+							parentElement.parent().addClass('active');
+						}
+
+						if (!parentElement.hasClass('in'))
+						{
+							parentElement.addClass('in');
+						}
+						
+						parentElement.parent().siblings().find('ul').removeClass('in');
+					});*/
+				}
+			}
+
+		}
 	}
 }
 
