@@ -3672,7 +3672,7 @@ mydigitalstructure._util.view.popover =
 						options.content += '<button type="button" class="btn btn-link text-muted myds-close" data-context="popover">Cancel</button>';
 					}
 
-					if (controller != undefined)
+					if (buttonController != undefined)
 					{
 						options.content += '<button type="button" class="btn ' + buttonClass + '"' +
 										' data-context="popover"' +
