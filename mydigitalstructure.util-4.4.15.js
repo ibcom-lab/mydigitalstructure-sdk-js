@@ -218,8 +218,8 @@ mydigitalstructure._util.view.handlers['myds-click'] = function (event)
 
 			var data = mydigitalstructure._util.data.clean(element.data());
 			
-			//if (data.context != undefined && data.id != undefined)
-            if (data.context != undefined)
+			if (data.context != undefined && data.id != undefined)
+            //if (data.context != undefined)
 			{
 				data[data.context] = data.id
 			}
