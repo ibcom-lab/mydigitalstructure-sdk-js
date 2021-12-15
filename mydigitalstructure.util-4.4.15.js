@@ -3595,15 +3595,7 @@ mydigitalstructure._util.view.datepicker = function (param)
 		options = _.assign(options, mydigitalstructure._scope.app.options.styles.datePicker.options);
 	}
 
-    if ($.fn.flatpickr != undefined)
-	{
-        options.enableTime = _.includes(format.toUpperCase(), 'H');
-        options.dateFormat = format;
-        _.replace(options.dateFormat, 'LT', 'H:i');
-
-        $(selector).flatpickr(options);
-    }
-	else if ($.fn.datetimepicker != undefined)
+	if ($.fn.datetimepicker != undefined)
 	{
         if (debug)
         {
@@ -3620,6 +3612,14 @@ mydigitalstructure._util.view.datepicker = function (param)
 			$(selector).datetimepicker(options);
 		}
 	}
+    else if ($.fn.flatpickr != undefined)
+	{
+        options.enableTime = _.includes(format.toUpperCase(), 'H');
+        options.dateFormat = format;
+        _.replace(options.dateFormat, 'LT', 'H:i');
+
+        $(selector).flatpickr(options);
+    }
 }
 
 mydigitalstructure._util.controller.add(
