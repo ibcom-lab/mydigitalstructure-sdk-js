@@ -142,20 +142,20 @@ mydigitalstructure._util.factory.dashboard = function (param)
 								data['_summary' + summaryKey] = summaryValue;
 							})
 						}
+					
+						if (dashboard.defaults == undefined) {dashboard.defaults = {}}
+
+						_.each(data, function (value, key)
+						{
+							if (_.isNotSet(data[key]) && _.isSet(dashboard.defaults[key]))
+							{
+								data[key] = dashboard.defaults[key]
+							}
+						});
+						
+						data = _.assign(dashboard.defaults, data);
 					}
-
-                    if (dashboard.defaults == undefined) {dashboard.defaults = {}}
-
-                    _.each(data, function (value, key)
-                    {
-                        if (_.isNotSet(data[key]) && _.isSet(dashboard.defaults[key]))
-                        {
-                            data[key] = dashboard.defaults[key]
-                        }
-                    });
-                    
-                    data = _.assign(dashboard.defaults, data);
-
+					
 					app.set(
 					{
 						scope: 'util-dashboard',
