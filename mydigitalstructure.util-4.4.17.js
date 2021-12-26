@@ -3815,7 +3815,7 @@ mydigitalstructure._util.controller.add(
 	code: function (param)
 	{
 		var date = mydigitalstructure._util.param.get(param, 'date').value;
-        var add = mydigitalstructure._util.param.get(param, 'add').value;
+		var modify = mydigitalstructure._util.param.get(param, 'modify').value;
         var format = mydigitalstructure._util.param.get(param, 'format', {default: 'D MMM YYYY'}).value;
 
 		if (date == undefined)
@@ -3823,7 +3823,7 @@ mydigitalstructure._util.controller.add(
 			date = moment().format(format)
 		}
 
-        if (_.isSet(add))
+        if (_.isSet(modify))
         {
             if (!_.isFunction(moment))
             {
@@ -3835,7 +3835,7 @@ mydigitalstructure._util.controller.add(
 
                 if (_date.isValid())
                 {
-                    _date = _date.add(add);
+                    _date = _date.add(modify);
                 }
 
                 date = _date.format(format);
