@@ -300,24 +300,24 @@ if (_.isObject(XLSX))
                             if (format.range != undefined)
                             {
                                 if (format.range.header != undefined)
-                            {
-                                if (format.range.header.firstRow)
                                 {
-                                    format.range.header.cell =
-                                        (format.range.header.firstRowColumn!=undefined?format.range.header.firstRowColumn:'A') + '1';
+                                    if (format.range.header.firstRow)
+                                    {
+                                        format.range.header.cell =
+                                            (format.range.header.firstRowColumn!=undefined?format.range.header.firstRowColumn:'A') + '1';
+                                    }
                                 }
-                            }
 
                                 if (format.range.footer != undefined)
-                            {
-                                if (format.range.footer.lastRow)
                                 {
-                                    format.range.footer.cell = (format.range.footer.lastRowColumn!=undefined?format.range.footer.lastRowColumn:'A') +
-                                            (numeral(mydigitalstructure._util.import.sheet.data.sheets[format.sheet].maximumRow).value() + 1);
+                                    if (format.range.footer.lastRow)
+                                    {
+                                        format.range.footer.cell = (format.range.footer.lastRowColumn!=undefined?format.range.footer.lastRowColumn:'A') +
+                                                (numeral(mydigitalstructure._util.import.sheet.data.sheets[format.sheet].maximumRow).value() + 1);
+                                    }
                                 }
-                            }
-                            }	
-                        });
+                        }	
+                    });
 
                     //PROCESS FIELD FORMATS
 
