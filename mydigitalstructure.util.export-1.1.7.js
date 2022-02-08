@@ -789,17 +789,43 @@ if (_.isObject(window.XLSX))
 												name.Ref = '\'' + name.sheet + '\'!$' + name.col + '$' + name.row;
 											}
 										});
+
+										var newRows = _.range(format.fieldsEndRow + 1, (format.fieldsEndRow + format.rowsToAdd + 1));
+										var fieldCols = _.map(format.range.fields, 'column');
+
+										_.each(format.range.fields, function (field)
+										{
+											var cell = XLSX.utils.decode_cell(field.column + format.fieldsEndRow);
+
+											field.merge = _.find(worksheet['!merges'], function (merge)
+											{
+												return (merge.s.c == cell.c) && (merge.s.r == cell.r);
+											});
+										});
+
+									
+
+										_.each(newRows, function (newRow)
+										{
+											_.each(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'], function (column)
+											{
+												worksheet[column + newRow] = _.cloneDeep(worksheet[column + format.fieldsEndRow]);
+											});
+
+											_.each(format.range.fields, function (field)
+											{
+												if (field.merge != undefined)
+												{
+													var newMerge = _.cloneDeep(field.merge);
+													newMerge.s.r = (newRow - 1);
+													newMerge.e.r = (newRow - 1);
+													worksheet['!merges'].push(newMerge);
+												}
+											});
+										});
 									}
 							   }
 							}
-
-							/*
-							if (name.Name == 'Site_Contact_Name')
-							{
-								name.Ref = "'HARPS Summary'!$C$32";
-								name.cell = 'C32';
-							}
-							*/
 						});
 
 						//RESOLVE NAMES TO CELLS
