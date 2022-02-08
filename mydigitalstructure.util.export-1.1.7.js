@@ -700,11 +700,109 @@ if (_.isObject(window.XLSX))
 					var data = new Uint8Array(req.response);
 				  	var workbook = XLSX.read(data, {type: "array", cellStyles: true, bookImages: true});
 
-				  	//RESOLVE NAMES TO CELLS
-
-				  	if (workbook.Workbook != undefined)
+					if (workbook.Workbook != undefined)
 				  	{
+						var worksheet;
+
 					  	mydigitalstructure._util.export.sheet.data.names = workbook.Workbook.Names;
+
+						//CHECK IF NEED TO INSERT ANY CELLS BASED ON RANGES AND THEN ADJUST NAMES IN THE WORK BOOK.
+
+						_.each(exportFormats, function (format)
+						{
+							if (format.range != undefined)
+							{
+								_.each(mydigitalstructure._util.export.sheet.data.names,  function (name)
+								{
+									name.sheet = _.replaceAll(_.first(_.split(name.Ref, '!')), "'", '');
+						 			name.cell = _.replaceAll(_.last(_.split(name.Ref, '!')), '\\$', '');
+									name.row = numeral(name.cell).value();
+									name.col = _.replace(name.cell, name.row, '');
+
+									if (format.range.header != undefined)
+									{
+										if (format.range.header.name != undefined)
+										{
+											if (format.range.header.name.toLowerCase() == name.Name.toLowerCase())
+											{
+												format.range.header.cell = name.cell;
+											}
+										}
+
+										if (format.range.header.firstRow)
+										{
+											format.range.header.cell =
+												(format.range.header.firstRowColumn!=undefined?format.range.header.firstRowColumn:'A') + '1';
+										}
+									}
+
+									if (format.range.footer != undefined)
+									{
+										if (format.range.footer.name != undefined)
+										{
+											if (format.range.footer.name.toLowerCase() == name.Name.toLowerCase())
+											{
+												format.range.footer.cell = name.cell;
+											}
+										}
+
+										if (format.range.footer.lastRow)
+										{
+											format.range.footer.cell = (format.range.footer.lastRowColumn!=undefined?format.range.footer.lastRowColumn:'A') +
+													(numeral(mydigitalstructure._util.import.sheet.data.sheets[format.sheet].maximumRow).value() + 1);
+										}
+									}
+								});
+
+								var headerRow = numeral(format.range.header.cell).value(); //45
+								var footerRow = numeral(format.range.footer.cell).value(); //53
+				   
+								format.fieldsStartRow = headerRow + 1; //46
+								format.fieldsEndRow = footerRow - 1; //52
+				   		   
+								var rows = _.range(format.fieldsStartRow, format.fieldsEndRow + 1);
+								
+								var data = _.find(exportData, function(_exportData)
+								{
+									return (_exportData.object == format.storage.object 
+												&& _exportData.field == format.storage.field)
+								});
+							   
+							   if (data != undefined)
+							   {
+									format.rowsToAdd = (data.value.length - rows.length);
+
+									if (format.rowsToAdd > 0)
+									{
+										worksheet = workbook.Sheets[format.sheet];
+
+										XLSX_OPS.insert_rows(worksheet, format.fieldsEndRow, format.rowsToAdd);
+
+										format.rowsImpactedAfter = format.fieldsEndRow;
+
+										_.each(mydigitalstructure._util.export.sheet.data.names,  function (name)
+										{
+											if ((name.row > format.rowsImpactedAfter) && (name.sheet == format.sheet))
+											{
+												name.row = name.row + format.rowsToAdd;
+												name.cell = name.col + name.row;
+												name.Ref = '\'' + name.sheet + '\'!$' + name.col + '$' + name.row;
+											}
+										});
+									}
+							   }
+							}
+
+							/*
+							if (name.Name == 'Site_Contact_Name')
+							{
+								name.Ref = "'HARPS Summary'!$C$32";
+								name.cell = 'C32';
+							}
+							*/
+						});
+
+						//RESOLVE NAMES TO CELLS
 
 					  	_.each(mydigitalstructure._util.export.sheet.data.names,  function (name)
 					  	{
@@ -718,7 +816,44 @@ if (_.isObject(window.XLSX))
 									if (format.name.toLowerCase() == name.Name.toLowerCase() 
 											&& format.sheet == name.sheet)
 									{
-			   						format.cell = name.cell;
+			   							format.cell = name.cell;
+									}
+								}
+
+								if (format.range != undefined)
+								{
+									if (format.range.header != undefined)
+									{
+										if (format.range.header.name != undefined)
+										{
+											if (format.range.header.name.toLowerCase() == name.Name.toLowerCase())
+											{
+												format.range.header.cell = name.cell;
+											}
+										}
+
+										if (format.range.header.firstRow)
+										{
+											format.range.header.cell =
+												(format.range.header.firstRowColumn!=undefined?format.range.header.firstRowColumn:'A') + '1';
+										}
+									}
+
+									if (format.range.footer != undefined)
+									{
+										if (format.range.footer.name != undefined)
+										{
+											if (format.range.footer.name.toLowerCase() == name.Name.toLowerCase())
+											{
+												format.range.footer.cell = name.cell;
+											}
+										}
+
+										if (format.range.footer.lastRow)
+										{
+											format.range.footer.cell = (format.range.footer.lastRowColumn!=undefined?format.range.footer.lastRowColumn:'A') +
+													(numeral(mydigitalstructure._util.import.sheet.data.sheets[format.sheet].maximumRow).value() + 1);
+										}
 									}
 								}
 							});
@@ -727,7 +862,6 @@ if (_.isObject(window.XLSX))
 
 				  	// GO THROUGH FORMATS AND WRITE VALUES TO WORKSHEETS
 
-				  	var worksheet;
 				  	var cell;
 				  	var value;
 
@@ -735,45 +869,13 @@ if (_.isObject(window.XLSX))
 				  	{
 				  		if (format.sheet != undefined)
 				  		{
+							worksheet = workbook.Sheets[format.sheet];
+
 					  		value = format.value;
 
 							if (format.range != undefined)
 							{
-								if (format.range.header != undefined)
-								{
-									if (format.range.header.name != undefined)
-									{
-										if (format.range.header.name.toLowerCase() == name.Name.toLowerCase())
-										{
-											format.range.header.cell = name.cell;
-										}
-									}
-
-									if (format.range.header.firstRow)
-									{
-										format.range.header.cell =
-											(format.range.header.firstRowColumn!=undefined?format.range.header.firstRowColumn:'A') + '1';
-									}
-								}
-
-								if (format.range.footer != undefined)
-								{
-									if (format.range.footer.name != undefined)
-									{
-										if (format.range.footer.name.toLowerCase() == name.Name.toLowerCase())
-										{
-											format.range.footer.cell = name.cell;
-										}
-									}
-
-									if (format.range.footer.lastRow)
-									{
-										format.range.footer.cell = (format.range.footer.lastRowColumn!=undefined?format.range.footer.lastRowColumn:'A') +
-												(numeral(mydigitalstructure._util.import.sheet.data.sheets[format.sheet].maximumRow).value() + 1);
-									}
-								}
-
-								mydigitalstructure._util.export.sheet.range(format, worksheet);
+								mydigitalstructure._util.export.sheet.range(format, workbook, worksheet, exportData);
 							}	
 							else
 							{  
@@ -792,8 +894,6 @@ if (_.isObject(window.XLSX))
 										}
 									}
 								}
-
-								worksheet = workbook.Sheets[format.sheet];
 
 								if (worksheet != undefined)
 								{
@@ -843,14 +943,42 @@ if (_.isObject(window.XLSX))
 					);}
 					
 					//If email: true then process the automation task by name - once moved to myds util
-					
 				}
 
 				req.send();
 			}
 		},
 
-		range: function (format, worksheet)
+		insertRows: function (wb, ws_name, start_row, nrows, opts)
+		{
+			// insert rows
+			opts = opts || {};
+			XLSX_OPS.insert_rows(wb.Sheets[ws_name], start_row, nrows, opts);
+			
+			// this part forcefully rewrites defined names even if they are anchored
+			var crefregex = /(^|[^._A-Z0-9])([$]?)([A-Z]{1,2}|[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D])([$]?)([1-9]\d{0,5}|10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6])(?![_.\(A-Za-z0-9])/g;
+			var formula_cb = function($0, $1, $2, $3, $4, $5) {
+				var _R = XLSX.utils.decode_row($5), _C = XLSX.utils.decode_col($3);
+				if(_R >= start_row) _R += nrows;
+				return $1+$2 + XLSX.utils.encode_col(_C)+$4+XLSX.utils.encode_row(_R);
+			};
+			
+			// loop across the names
+			wb?.Workbook?.Names?.forEach(name => {
+				if(!name.Ref) return; // the Ref key is the formula
+			
+				if(name.Ref.indexOf("!") == -1) { // same-sheet formula -- should be scoped to worksheet
+				if(name.Sheet != wb.SheetNames.indexOf(ws_name)) return;
+				} else { // cross-sheet index -- should explicitly reference ws name e.g. Sheet1!A1:B2
+				if(name.Ref.indexOf(ws_name) == -1) return;
+				}
+			
+				// update necessary references
+				name.Ref = name.Ref.replace(crefregex, formula_cb);
+			});
+		},
+
+		range: function (format, workbook, worksheet, exportData)
  		{
  			//Use range header to get cells to work through
  			//Assume cells have been resolved
@@ -869,75 +997,78 @@ if (_.isObject(window.XLSX))
  			var importData = []
 
  			var rows = _.range(fieldsStartRow, fieldsEndRow + 1);
- 			var value;
- 			var valueFormatted;
-
+ 			
  			if (format.name == undefined)
  			{
  				format.name = _.camelCase(format.caption).toLowerCase();
  			}
 
- 			_.each(rows, function (row, r)
- 			{
- 				rowFields = _.cloneDeep(fields);
- 				
- 				_.each(rowFields, function (field)
- 				{
- 					valueFormatted = undefined;
- 					value = undefined;
+ 			var data = _.find(exportData, function(_exportData)
+			{
+				return (_exportData.object == format.storage.object 
+							&& _exportData.field == format.storage.field)
+			})
+			
+			if (data != undefined)
+			{
+				//more data than existing rows in the sheet.
 
- 					field.suffix = (r + 1);
- 					field.row = row;
- 					field.cell = field.column + field.row;  
+				/*
+				XLSX.utils.sheet_add_json(worksheet, [
+					{A: 'a', B:'b, z:3}
+				], {header:header, origin:"A6"});
+				*/
 
- 					field._cell = worksheet[field.cell];
- 					field._processing = {name: format.name + '-' + field.name + '-' + field.suffix, validate: {}, notes: {}}
+				if (data.value.length > rows.length)
+				{
+					/*
+					var origin = 'A27' //+ fieldsEndRow;
+					XLSX.utils.sheet_add_json(worksheet,
+					[
+						{A: 'insert-a', B:'b'}
+					],
+					{origin: origin});
+					*/
 
-					if (field._cell != undefined)
+					//var rowsToAdd = (data.value.length - rows.length);
+
+					//mydigitalstructure._util.export.sheet.insertRows(workbook, 'HARPS Summary', 27, rowsToAdd);  //Not resolving names
+					//XLSX_OPS.insert_rows(worksheet, 27, rowsToAdd);
+				}
+
+				_.each(rows, function (row, r)
+				{
+					rowFields = _.cloneDeep(fields);
+					rowData = data.value[r];
+					
+					_.each(rowFields, function (field)
 					{
-						value = field._cell.w;
-						if (value == undefined)
-						{
-							value = field._cell.v
-						}
+						field.suffix = (r + 1);
+						field.row = row;
+						field.cell = field.column + field.row;  
 
-						valueFormatted = value;
+						field._cell = worksheet[field.cell];
+						field._processing = {name: format.name + '-' + field.name + '-' + field.suffix, validate: {}, notes: {}}
 
-						if (field.format != undefined)
+						if (field._cell != undefined)
 						{
-							if (field.format.date != undefined)
+							var value = rowData[field.name]
+
+							if (value != undefined)
 							{
-								if (moment(valueFormatted, field.format.date.in).isValid())
+								field._cell.t = 's';
+
+								if (format.type != undefined)
 								{
-									valueFormatted = moment(valueFormatted, field.format.date.in).format(field.format.date.out)
+									field._cell.t = format.type;
 								}
-							}
-
-							if (field.format.controller != undefined)
-							{
-								valueFormatted = mydigitalstructure._util.controller.invoke(field.format.controller, field, valueFormatted)
+							
+								field._cell.v = (value!=undefined?value:'');
 							}
 						}
-
-						field._comments = field._cell.c;
-					}
-
-					if (valueFormatted == undefined)
-					{
-						valueFormatted = field.defaultValue;
-					}
-
-					field.value = valueFormatted;
-					field._value = value;
-
-					//VALIDATION
-					field._processing.validate = mydigitalstructure._util.import.validate(field, valueFormatted);
- 				});
-
- 				importData.push(_.cloneDeep(rowFields));
- 			});
-
- 			return importData;
+					});
+				});
+			}
  		},
 
 		store:
