@@ -770,7 +770,7 @@ if (_.isObject(window.XLSX))
 							   
 							   if (data != undefined)
 							   {
-									format.rowsToAdd = (data.value.length - rows.length);
+									format.rowsToAdd = (data.value.length - rows.length + 1);
 
 									if (format.rowsToAdd > 0)
 									{
@@ -791,25 +791,52 @@ if (_.isObject(window.XLSX))
 										});
 
 										var newRows = _.range(format.fieldsEndRow + 1, (format.fieldsEndRow + format.rowsToAdd + 1));
-										var fieldCols = _.map(format.range.fields, 'column');
+										
+                                        var minCol = 99999;
+                                        var maxCol = 0;
 
 										_.each(format.range.fields, function (field)
 										{
-											var cell = XLSX.utils.decode_cell(field.column + format.fieldsEndRow);
+											field._cellRC = XLSX.utils.decode_cell(field.column + format.fieldsEndRow);
+
+                                            if (field._cellRC.c < minCol) {minCol = field._cellRC.c}
+                                            if (field._cellRC.c > maxCol) {maxCol = field._cellRC.c}
 
 											field.merge = _.find(worksheet['!merges'], function (merge)
 											{
-												return (merge.s.c == cell.c) && (merge.s.r == cell.r);
+												return (merge.s.c == field._cellRC.c) && (merge.s.r == field._cellRC.r);
+											});
+
+                                            if (field.merge != undefined)
+                                            {
+                                                if (field.merge.e.c > maxCol) {maxCol = field.merge.e.c}
+                                            }
+
+                                            _.each(worksheet['!validations'], function (validation)
+											{
+                                                if (!_.isPlainObject(validation.ref))
+                                                {
+                                                    validation.ref = XLSX.utils.decode_range(validation.ref);
+                                                }
+                                                
+												if ((validation.ref.e.c == field._cellRC.c) && (validation.ref.e.r == field._cellRC.r))
+                                                {
+                                                    validation.ref.e.r = format.fieldsEndRow + format.rowsToAdd
+                                                }
 											});
 										});
 
-									
-
 										_.each(newRows, function (newRow)
 										{
-											_.each(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'], function (column)
+                                            var fieldColumns = _.range(minCol, (maxCol + 1));
+
+											_.each(fieldColumns, function (column)
 											{
-												worksheet[column + newRow] = _.cloneDeep(worksheet[column + format.fieldsEndRow]);
+                                                var newCell = XLSX.utils.encode_cell({r: (newRow - 1), c: column});
+                                                var cloneCell = XLSX.utils.encode_cell({r: (format.fieldsEndRow - 1), c: column});
+
+                                                worksheet[newCell] = _.cloneDeep(worksheet[cloneCell]);
+												//worksheet[column + newRow] = _.cloneDeep(worksheet[column + format.fieldsEndRow]);
 											});
 
 											_.each(format.range.fields, function (field)
@@ -822,6 +849,8 @@ if (_.isObject(window.XLSX))
 													worksheet['!merges'].push(newMerge);
 												}
 											});
+
+                                            worksheet['!rows'][(newRow - 1)] = worksheet['!rows'][(format.fieldsEndRow - 1)];
 										});
 									}
 							   }
@@ -1037,62 +1066,53 @@ if (_.isObject(window.XLSX))
 			
 			if (data != undefined)
 			{
-				//more data than existing rows in the sheet.
-
-				/*
-				XLSX.utils.sheet_add_json(worksheet, [
-					{A: 'a', B:'b, z:3}
-				], {header:header, origin:"A6"});
-				*/
-
-				if (data.value.length > rows.length)
-				{
-					/*
-					var origin = 'A27' //+ fieldsEndRow;
-					XLSX.utils.sheet_add_json(worksheet,
-					[
-						{A: 'insert-a', B:'b'}
-					],
-					{origin: origin});
-					*/
-
-					//var rowsToAdd = (data.value.length - rows.length);
-
-					//mydigitalstructure._util.export.sheet.insertRows(workbook, 'HARPS Summary', 27, rowsToAdd);  //Not resolving names
-					//XLSX_OPS.insert_rows(worksheet, 27, rowsToAdd);
-				}
-
 				_.each(rows, function (row, r)
 				{
 					rowFields = _.cloneDeep(fields);
 					rowData = data.value[r];
-					
-					_.each(rowFields, function (field)
-					{
-						field.suffix = (r + 1);
-						field.row = row;
-						field.cell = field.column + field.row;  
 
-						field._cell = worksheet[field.cell];
-						field._processing = {name: format.name + '-' + field.name + '-' + field.suffix, validate: {}, notes: {}}
+                    if (rowData != undefined)
+                    {
+                        _.each(rowFields, function (field)
+                        {
+                            field.suffix = (r + 1);
+                            field.row = row;
+                            field.cell = field.column + field.row;  
 
-						if (field._cell != undefined)
-						{
-							var value = rowData[field.name]
+                            field._cell = worksheet[field.cell];
+                            field._processing = {name: format.name + '-' + field.name + '-' + field.suffix, validate: {}, notes: {}}
 
-							if (value != undefined)
-							{
-								field._cell.t = 's';
+                            if (field._cell != undefined)
+                            {
+                                var value = rowData[field.name]
 
-								if (format.type != undefined)
-								{
-									field._cell.t = format.type;
-								}
-							
-								field._cell.v = (value!=undefined?value:'');
-							}
-						}
-					});
+                                if (value != undefined)
+                                {
+                                    field._cell.t = 's';
+
+                                    if (format.type != undefined)
+                                    {
+                                        field._cell.t = format.type;
+                                    }
+
+                                    if (_.has(field, 'format.values'))
+                                    {
+                                        if (field.format.values[value] != undefined)
+                                        {
+                                            value = field.format.values[value]
+                                        }
+                                    }
+                                
+                                    field._cell.v = (value!=undefined?value:'');
+                                }
+
+                                if (_.has(field, 'defaults.hasValue.style'))
+                                {
+                                     _.assign(field._cell.s, field.defaults.hasValue.style)   
+                                }
+                            }
+                        });
+                    }
 				});
 			}
  		},
