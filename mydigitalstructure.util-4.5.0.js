@@ -3759,7 +3759,7 @@ mydigitalstructure._util.view.dateFormat = function (param)
 	
 	if (dateCurrentFormat == undefined)
 	{
-		dateCurrentFormat = ["DD MMM YYYY", "D MMM YYYY", "D/MM/YYYY", "DD/MM/YYYY", "DD MMM YYYY HH:mm:ss"]
+		dateCurrentFormat = ["D MMMM YYYY", "DD MMMM YYYY", "DD MMM YYYY", "D MMM YYYY", "D/MM/YYYY", "DD/MM/YYYY", "DD MMM YYYY HH:mm:ss"]
 	}
 
 	if (date != '' && date != undefined && dateFormat != undefined)

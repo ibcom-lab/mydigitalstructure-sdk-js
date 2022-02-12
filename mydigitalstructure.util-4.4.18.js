@@ -8997,6 +8997,3 @@ mydigitalstructure._util.factory.core = function (param)
 		}
 	});
 }
-
-
-
