@@ -1724,8 +1724,15 @@ mydigitalstructure._util.security.trusted =
         
                     if (trustedLogon.assertionConsumerServiceURL == undefined)
                     {
-                        trustedLogon.assertionConsumerServiceURL =
-                            window.location.protocol + '//' + window.location.host + '/rpc/logon/?method=LOGON_TRUSTED';
+                        if (_.has(mydigitalstructure, '_scope.app.options.auth.trusted.saml.assertionConsumerServiceURL'))
+                        {
+                            trustedLogon.assertionConsumerServiceURL = mydigitalstructure._scope.app.options.auth.trusted.saml.assertionConsumerServiceURL;
+                        }
+                        else
+                        {
+                            trustedLogon.assertionConsumerServiceURL =
+                                window.location.protocol + '//' + window.location.host + '/rpc/logon/?method=LOGON_TRUSTED';
+                        }
                     }
         
                     if (trustedLogon.issuer == undefined)
@@ -1772,7 +1779,7 @@ mydigitalstructure._util.security.trusted =
                         var uriSAMLRequest = btoa(samlRequest);
                         uriSAMLRequest = encodeURIComponent(uriSAMLRequest);
         
-                        var uri = trustedLogon.identityProviderURL + '&SAMLRequest=' + uriSAMLRequest;
+                        var uri = trustedLogon.identityProviderURL + '?SAMLRequest=' + uriSAMLRequest;
         
                         return uri
                     }
