@@ -1706,15 +1706,15 @@ mydigitalstructure._util.security.trusted =
             {
                 if (_.has(mydigitalstructure, '_scope.session.identityProvider.saml'))
 				{
-                    var samlIdentityProvider = mydigitalstructure_scope.session.identityProvider.saml;
+                    var samlIdentityProvider = mydigitalstructure._scope.session.identityProvider.saml;
 
                     var trustedLogon =
                     {
                         identityProviderEntityID: samlIdentityProvider.id,
-                        name: samlIdentityProvider.name,
+                        identityProviderName: samlIdentityProvider.name,
                         issuer: samlIdentityProvider.id,
                         identityProviderAppName: samlIdentityProvider.name,
-                        url: samlIdentityProvider.url
+                        identityProviderURL: samlIdentityProvider.url
                     }
                 
                     if (trustedLogon.type == undefined)
@@ -1738,19 +1738,28 @@ mydigitalstructure._util.security.trusted =
                         trustedLogon.identityProviderAppName = window.location.host;
                     }
 
-                    //monashObjectID
+                    if (trustedLogon.identityProviderURL == undefined)
+                    {
+                        trustedLogon.identityProviderURL = 
+                            trustedLogon.identityProviderEntityID
+                    }
 
                     trustedLogon.nameIDFormat = 'emailAddress';
+
+                    if (_.has(mydigitalstructure, '_scope.app.options.auth.trusted.saml.nameIDFormat'))
+                    {
+                        trustedLogon.nameIDFormat = mydigitalstructure._scope.app.options.auth.trusted.saml.nameIDFormat;
+                    }
         
                     if (trustedLogon.type == 'SAML2.0')
                     {
-                        var sSAMLRequest = 
+                        var samlRequest = 
                             '<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"' +
-                                ' ID="mydigitalstructure_' + ns1blankspace.session.logonkey + '"' +
+                                ' ID="mydigitalstructure_' + mydigitalstructure._scope.session.logonkey + '"' +
                                 ' Version="2.0"' +
                                 ' ProviderName="' + trustedLogon.identityProviderAppName + '"' +
                                 ' IssueInstant="' + moment.utc().format() + '"' +
-                                ' Destination="' + trustedLogon.identityProviderEntityID + '"' +
+                                ' Destination="' + trustedLogon.identityProviderURL + '"' +
                                 ' ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"' +
                                 ' AssertionConsumerServiceURL="' + trustedLogon.assertionConsumerServiceURL + '">' +
                                 '<saml:Issuer>' + trustedLogon.issuer + '</saml:Issuer>' +
@@ -1760,18 +1769,12 @@ mydigitalstructure._util.security.trusted =
                                     '</samlp:RequestedAuthnContext>' +
                             '</samlp:AuthnRequest>';
         
-                        var sURISAMLRequest = btoa(sSAMLRequest);
-                        sURISAMLRequest = encodeURIComponent(sURISAMLRequest);
+                        var uriSAMLRequest = btoa(samlRequest);
+                        uriSAMLRequest = encodeURIComponent(uriSAMLRequest);
         
-                        if (oOptionsTrustedLogon.identityProviderURL == undefined)
-                        {
-                            oOptionsTrustedLogon.identityProviderURL = 
-                                oOptionsTrustedLogon.identityProviderEntityID
-                        }
-            
-                        var sURI = oOptionsTrustedLogon.identityProviderURL + '&SAMLRequest=' + sURISAMLRequest;
+                        var uri = trustedLogon.identityProviderURL + '&SAMLRequest=' + uriSAMLRequest;
         
-                        return sURI
+                        return uri
                     }
                 }
             },   
