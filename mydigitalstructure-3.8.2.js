@@ -1476,9 +1476,17 @@ mydigitalstructure._util =
                                                 {
                                                     saml:
                                                     {
-                                                        id: data.SAMLIdentityProviderId,
-                                                        name: data.SAMLIdentityProviderName,
-                                                        url: data.SAMLIdentityProviderURL
+                                                        id: (data.SAMLIdentityProviderId != undefined?data.SAMLIdentityProviderId:data.samlidentityproviderid),
+                                                        name: (data.SAMLIdentityProviderName != undefined?data.SAMLIdentityProviderName:data.samlidentityprovidername),
+                                                        url: (data.SAMLIdentityProviderURL != undefined?data.SAMLIdentityProviderURL:data.samlidentityproviderurl),
+                                                        usernamepath: data.samlidentityproviderusernamepath
+                                                    }
+                                                },
+                                                serviceProvider:
+                                                {
+                                                    saml:
+                                                    {
+                                                        usernamepath: data.samlidentityproviderusernamepath
                                                     }
                                                 }
                                             });
