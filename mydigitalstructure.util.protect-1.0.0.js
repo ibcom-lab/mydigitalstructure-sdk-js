@@ -1,12 +1,25 @@
 /*
+    Utility for protecting data through encryption and storing locally.
+
     Uses: https://github.com/brix/crypto-js
+
+    Data stored locally can also be protected using a key stored on mydigitalstructure.cloud.
+
+    ie to pre-encrypt data before saving on mydigitalstructure.cloud:
+
+    1. Create a key [localDataProtectionKey]
+    2. Save key [localDataProtectionKey] in local browser cache, but before saving it:
+        2a. Create another key [cloudLocalKeyProtectionKey] that is saved on mydigitalstructure.cloud against the user account.
+        2b. Use the cloudKey to encrypt the local key
+    3. Use the local [localDataProtectionKey] key to encrypt data
+
 */
 
 mydigitalstructure._util.protect =
 {
 	data: {},
 
-	available: function (oParam)
+	available: function (param)
     {
         return ('CryptoJS' in window);
     },
@@ -19,13 +32,13 @@ mydigitalstructure._util.protect =
             single:	function(param)
             {
                 var type;
-                var persist = mydigitalstructure._util.param.get(oParam, 'persist', {default: false}).value;
-                var cryptoKeyReference = mydigitalstructure._util.param.get(oParam, 'cryptoKeyReference').value;
-                var local = mydigitalstructure._util.param.get(oParam, 'local', {default: false}).value;
+                var persist = mydigitalstructure._util.param.get(param, 'persist', {default: false}).value;
+                var cryptoKeyReference = mydigitalstructure._util.param.get(param, 'cryptoKeyReference').value;
+                var local = mydigitalstructure._util.param.get(param, 'local', {default: false}).value;
                 var keySize = 512/32;
-                var savedCryptoKey = mydigitalstructure._util.param.get(oParam, 'savedCryptoKey').value;
+                var savedCryptoKey = mydigitalstructure._util.param.get(param, 'savedCryptoKey').value;
 
-                if (!savedCryptoKey)
+                if (!savedCryptoKey && persist)
                 {	
                     var salt = CryptoJS.lib.WordArray.random(128/8);
                     var password = mydigitalstructure._scope.session.logonKey;
@@ -45,245 +58,239 @@ mydigitalstructure._util.protect =
                                     method: mydigitalstructure._util.local.cache.save,
                                     param:
                                     {
-                                        key: sCryptoKeyReference,
-                                        cryptoKeyReference: sCryptoKeyReference,
+                                        key: cryptoKeyReference,
+                                        cryptoKeyReference: cryptoKeyReference,
                                         persist: true,
-                                        protect: oParam.protect,
-                                        data: sCryptoKey
+                                        protect: param.protect,
+                                        data: cryptoKey
                                     }
                                 },
                                 then:
                                 {
                                     comment: 'util.local.cache.save<>util.protect.key.create.single',
-                                    method: ns1blankspace.util.protect.key.create.single,
+                                    method: mydigitalstructure._util.protect.key.create.single,
                                     set: 'savedCryptoKey',
-                                    param: oParam
+                                    param: param
                                 }	
                             });
                         }
                         else
                         {
-                            var oData = 
+                            var data = 
                             {
-                                reference: sCryptoKeyReference,
-                                key: sCryptoKey
+                                reference: cryptoKeyReference,
+                                key: cryptoKey
                             }
 
-                            $.ajax(
+                            param.savedCryptoKey = cryptoKey;
+
+                            mydigitalstructure.cloud.save(
                             {
-                                type: 'POST',
-                                url: ns1blankspace.util.endpointURI('CORE_PROTECT_KEY_MANAGE'),
-                                data: oData,
-                                dataType: 'json',
-                                success: function ()
-                                {
-                                    oParam.savedCryptoKey = sCryptoKey;
-                                    ns1blankspace.util.protect.key.create.single(oParam)
-                                }
-                            });		
+                                object: 'core_protect_key',
+                                data: data,
+                                callback: mydigitalstructure._util.protect.key.create.single,
+                                callbackParam: param
+                            });	
                         }
                     }
                 }
                 else
                 {	
-                    var sCryptoKey = mydigitalstructure._util.param.get(oParam, 'cryptoKey', {remove: true}).value;
+                    var cryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
 
-                    if (sCryptoKeyReference && sCryptoKey)
+                    if (cryptoKeyReference && cryptoKey)
                     {	
-                        ns1blankspace.util.protect.key.data[sCryptoKeyReference] = sCryptoKey;
+                        mydigitalstructure._util.protect.key.data[cryptoKeyReference] = cryptoKey;
                     }
 
-                    return ns1blankspace.util.whenCan.complete(sSavedCryptoKey, oParam)
+                    return mydigitalstructure._util.whenCan.complete(savedCryptoKey, param)
                 }	
-            },
-
-            pair: function(oParam) {}			
+            }		
         },			
 
-        search: 	function(oParam)
+        search: function(param)
+        {
+            var local = mydigitalstructure._util.param.get(param, 'local', {default: false}).value;
+            var cryptoKeyReference = mydigitalstructure._util.param.get(param, 'cryptoKeyReference').value;
+            var createKey = mydigitalstructure._util.param.get(param, 'createKey', {default: false}).value;
+            var cryptoKey = mydigitalstructure._util.protect.key.data[cryptoKeyReference];
+
+            if (cryptoKey != undefined)
+            {	
+                mydigitalstructure._util.whenCan.complete(cryptoKey, param);
+            }
+            else
+            {	
+                var protectCryptoKey = mydigitalstructure._util.param.get(param, 'protectCryptoKey').value;
+
+                if (protectCryptoKey === undefined)
+                {
+                    if (local)
                     {
-                        var bLocal = mydigitalstructure._util.param.get(oParam, 'local', {"default": false}).value;
-                        var sCryptoKeyReference = mydigitalstructure._util.param.get(oParam, 'cryptoKeyReference').value;
-                        var bCreateKey = mydigitalstructure._util.param.get(oParam, 'createKey', {"default": false}).value;
-
-                        if (ns1blankspace.util.protect.key.data[sCryptoKeyReference] !== undefined)
-                        {	
-                            ns1blankspace.util.whenCan.complete(ns1blankspace.util.protect.key.data[sCryptoKeyReference], oParam);
-                        }
-                        else
-                        {	
-                            var sProtectCryptoKey = mydigitalstructure._util.param.get(oParam, 'protectCryptoKey').value;
-
-                            if (sProtectCryptoKey === undefined)
+                        param = mydigitalstructure._util.param.set(param, 'key', cryptoKeyReference);
+                        
+                        mydigitalstructure._util.whenCan.execute(
+                        {
+                            now:
                             {
-                                if (bLocal)
-                                {
-                                    oParam = ns1blankspace.util.setParam(oParam, 'key', sCryptoKeyReference);
-                                    //var sCryptoKey = ns1blankspace.util.local.cache.search(oParam);
-                                    
-                                    ns1blankspace.util.whenCan.execute(
-                                    {
-                                        now:
-                                        {
-                                            method: ns1blankspace.util.local.cache.search,
-                                            param: oParam
-                                        },
-                                        then:
-                                        {
-                                            comment: 'util.local.cache.search<>util.protect.key.search',
-                                            method: ns1blankspace.util.protect.key.search,
-                                            set: 'protectCryptoKey',
-                                            param: oParam
-                                        }
-                                    });
-                                }	
-                                else
-                                {
-                                    var oSearch = new AdvancedSearch();
-                                    oSearch.method = 'CORE_PROTECT_KEY_SEARCH';
-                                    oSearch.addField('key');
-                                    oSearch.addField(ns1blankspace.option.auditFields);
-                                    oSearch.addFilter('reference', 'EQUAL_TO', sCryptoKeyReference);
-                                    oSearch.sort('modifieddate', 'desc');
-                                    
-                                    oSearch.getResults(function(oResponse)
-                                    {
-                                        oParam = ns1blankspace.util.setParam(oParam, 'protectCryptoKey', '');
-
-                                        if (oResponse.data.rows.length !== 0)
-                                        {	
-                                            oParam.protectCryptoKey = oResponse.data.rows[0].key;
-                                        }
-
-                                        ns1blankspace.util.protect.key.search(oParam)
-                                    });
-                                }	
+                                method: mydigitalstructure._util.local.cache.search,
+                                param: param
+                            },
+                            then:
+                            {
+                                comment: 'util.local.cache.search<>util.protect.key.search',
+                                method: mydigitalstructure._util.protect.key.search,
+                                set: 'protectCryptoKey',
+                                param: param
                             }
-                            else
+                        });
+                    }	
+                    else
+                    {
+                        mydigitalstructure.cloud.search(
+                        {
+                            object: 'core_protect_key',
+                            fields: ['key'],
+                            filters: 
+                            [
+                                {
+                                    field: 'reference',
+                                    value: 'cryptoKeyReference'
+                                }
+                            ],
+                            sorts:
+                            [
+                                {
+                                    field: 'modifieddate',
+                                    direction: 'desc'
+                                }
+                            ],
+                            includeMetadata: true,
+                            includeMetadataGUID: true,
+                            callbackParam: param,
+                            callback: function (param, response)
                             {
-                                if (bCreateKey)
+                                param = mydigitalstructure._util.param.set(param, 'protectCryptoKey', '');
+
+                                if (response.data.rows.length !== 0)
                                 {	
-                                    ns1blankspace.util.whenCan.execute(
-                                    {
-                                        now:
-                                        {
-                                            method: ns1blankspace.util.protect.key.create.single,
-                                            param:
-                                            {
-                                                local: bLocal,
-                                                persist: true,
-                                                cryptoKeyReference: sCryptoKeyReference
-                                            }
-                                        },
-                                        then:
-                                        {
-                                            comment: 'util.protect.key.create.single<>util.protect.key.search',
-                                            method: ns1blankspace.util.protect.key.search,
-                                            param: oParam
-                                        }
-                                    });
+                                    param.protectCryptoKey = _.first(response.data.row).key;
                                 }
 
-                                if (sProtectCryptoKey != undefined)
-                                {	
-                                    ns1blankspace.util.protect.key.data[sCryptoKeyReference] = sProtectCryptoKey;
-                                }
-
-                                return ns1blankspace.util.whenCan.complete(sProtectCryptoKey, oParam);
+                                mydigitalstructure._util.protect.key.search(param)
                             }
-                        }	
-                    }					
+                        });
+                    }	
+                }
+                else
+                {
+                    if (createKey)
+                    {	
+                        mydigitalstructure._util.whenCan.execute(
+                        {
+                            now:
+                            {
+                                method: mydigitalstructure._util.protect.key.create.single,
+                                param:
+                                {
+                                    local: local,
+                                    persist: true,
+                                    cryptoKeyReference: cryptoKeyReference
+                                }
+                            },
+                            then:
+                            {
+                                comment: 'util.protect.key.create.single<>util.protect.key.search',
+                                method: mydigitalstructure._util.protect.key.search,
+                                param: param
+                            }
+                        });
+                    }
+
+                    if (protectCryptoKey != undefined)
+                    {	
+                        mydigitalstructure._util.protect.key.data[cryptoKeyReference] = protectCryptoKey;
+                    }
+
+                    return mydigitalstructure._util.whenCan.complete(protectCryptoKey, param);
+                }
+            }	
+        }					
     },
 
-encrypt: 	function(oParam)
+    encrypt: function(param)
     {
-        if (mydigitalstructure._util.param.get(oParam, 'cryptoKey').exists)
+        if (mydigitalstructure._util.param.get(param, 'cryptoKey').exists)
         {
-            var sData = mydigitalstructure._util.param.get(oParam, 'data', {remove: true}).value;
-            var sCryptoKey = mydigitalstructure._util.param.get(oParam, 'cryptoKey', {remove: true}).value;
-            var sProtectedData = CryptoJS.AES.encrypt(sData, sCryptoKey).toString();
+            var data = mydigitalstructure._util.param.get(param, 'data', {remove: true}).value;
+            var sCryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
+            var protectedData = CryptoJS.AES.encrypt(data, cryptoKey).toString();
 
-            if (mydigitalstructure._util.param.get(oParam, 'onComplete').exists)
+            if (mydigitalstructure._util.param.get(param, 'onComplete').exists)
             {	
-                oParam = ns1blankspace.util.setParam(oParam, 'protectedData', sProtectedData);
-                ns1blankspace.util.onComplete(oParam)
+                param = mydigitalstructure._util.param.set(param, 'protectedData', protectedData);
+                mydigitalstructure._util.onComplete(param)
             }
             else
             {
-                return ns1blankspace.util.whenCan.complete(sProtectedData, oParam);
+                return mydigitalstructure._util.whenCan.complete(protectedData, param);
             }	
         }
         else
         {	
-            ns1blankspace.util.whenCan.execute(
+            mydigitalstructure._util.whenCan.execute(
             {
                 now:
                 {
-                    method: ns1blankspace.util.protect.key.search,
-                    param: oParam
+                    method: mydigitalstructure._util.protect.key.search,
+                    param: param
                 },
                 then:
                 {
                     comment: 'util.protect.key.search<>util.protect.encrypt',
-                    method: ns1blankspace.util.protect.encrypt,
+                    method: mydigitalstructure._util.protect.encrypt,
                     set: 'cryptoKey',
-                    param: oParam
+                    param: param
                 }	
             });
         }	
     },
 
-decrypt: 	function(oParam)
+    decrypt: function(param)
     {
-        if (mydigitalstructure._util.param.get(oParam, 'cryptoKey').value)
+        if (mydigitalstructure._util.param.get(param, 'cryptoKey').value)
         {
-            var sProtectedData = mydigitalstructure._util.param.get(oParam, 'protectedData', {remove: true}).value;
-            var sCryptoKey = mydigitalstructure._util.param.get(oParam, 'cryptoKey', {remove: true}).value;
-            var sData = CryptoJS.AES.decrypt(sProtectedData, sCryptoKey).toString(CryptoJS.enc.Utf8);
+            var protectedData = mydigitalstructure._util.param.get(param, 'protectedData', {remove: true}).value;
+            var cryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
+            var data = CryptoJS.AES.decrypt(protectedData, cryptoKey).toString(CryptoJS.enc.Utf8);
 
-            if (mydigitalstructure._util.param.get(oParam, 'onComplete').exists)
+            if (mydigitalstructure._util.param.get(param, 'onComplete').exists)
             {	
-                oParam = ns1blankspace.util.setParam(oParam, 'data', sData)
-                ns1blankspace.util.onComplete(oParam)
+                param = mydigitalstructure._util.param.set(param, 'data', data)
+                mydigitalstructure._util.onComplete(param)
             }
             else
             {
-                return ns1blankspace.util.whenCan.complete(sData, oParam);
+                return mydigitalstructure._util.whenCan.complete(data, param);
             }	
         }
         else
         {	
-            ns1blankspace.util.whenCan.execute(
+            mydigitalstructure._util.whenCan.execute(
             {
                 now:
                 {
-                    method: ns1blankspace.util.protect.key.search,
-                    param: oParam
+                    method: mydigitalstructure._util.protect.key.search,
+                    param: param
                 },
                 then:
                 {
                     comment: 'util.protect.key.search<>util.protect.decrypt',
-                    method: ns1blankspace.util.protect.decrypt,
+                    method: mydigitalstructure._util.protect.decrypt,
                     set: 'cryptoKey',
-                    param: oParam
+                    param: param
                 }	
             });
         }	
     }								
-}	
-
-
-mydigitalstructure._util.factory.protect = function (param)
-{
-	mydigitalstructure._util.controller.add(
-	[
-		{
-			name: 'util-protext-xxx',
-			code: function (param)
-			{
-				//mydigitalstructure._.util
-			}
-		},
-	
-	]);
 }
