@@ -5877,7 +5877,7 @@ mydigitalstructure._util.whenCan =
 
     then: function(param)
     {
-        if (param && param.uuid)
+        if (_.has(param, 'uuid'))
         {
             return (_.find(mydigitalstructure._util.whenCan.queue, function (queue) {queue.uuid == param.uuid}))
         }	
@@ -5888,7 +5888,7 @@ mydigitalstructure._util.whenCan =
         mydigitalstructure._util.whenCan.queue.length = 0;
     },
 
-    execute: function(param)
+    invoke: function(param)
     {
         var uuid = mydigitalstructure._util.uuid();
 
@@ -9052,7 +9052,7 @@ mydigitalstructure._util.factory.core = function (param)
         name: 'util-whencan-invoke',
         code: function (param)
         {
-            mydigitalstructure._util.whenCan.execute(param)
+            mydigitalstructure._util.whenCan.invoke(param)
         }
     });
 
@@ -9097,7 +9097,8 @@ mydigitalstructure._util.factory.core = function (param)
 		'editor',
 		'chart',
 		'calendar',
-		'financial'
+		'financial',
+		'protect'
 	], function (namespace)
 	{
 		if (_.isFunction(mydigitalstructure._util.factory[namespace]))

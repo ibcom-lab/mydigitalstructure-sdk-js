@@ -16,33 +16,33 @@ mydigitalstructure._util.protect =
         data: {},
         create:
         {				
-            single:	function(oParam)
+            single:	function(param)
             {
-                var iType
-                var bPersist = ns1blankspace.util.getParam(oParam, 'persist', {"default": false}).value;
-                var sCryptoKeyReference = ns1blankspace.util.getParam(oParam, 'cryptoKeyReference').value;
-                var bLocal = ns1blankspace.util.getParam(oParam, 'local', {"default": false}).value;
+                var type;
+                var persist = mydigitalstructure._util.param.get(oParam, 'persist', {default: false}).value;
+                var cryptoKeyReference = mydigitalstructure._util.param.get(oParam, 'cryptoKeyReference').value;
+                var local = mydigitalstructure._util.param.get(oParam, 'local', {default: false}).value;
+                var keySize = 512/32;
+                var savedCryptoKey = mydigitalstructure._util.param.get(oParam, 'savedCryptoKey').value;
 
-                var sSavedCryptoKey = ns1blankspace.util.getParam(oParam, 'savedCryptoKey').value;
-
-                if (!sSavedCryptoKey)
+                if (!savedCryptoKey)
                 {	
-                    var sSalt = CryptoJS.lib.WordArray.random(128/8);
-                    var sPassword = ns1blankspace.logonKey;
-                    if (sPassword == undefined) {sPassword = (Math.random()).toString()}
-                    var sCryptoKey = CryptoJS.PBKDF2(sPassword, sSalt, { keySize: 512/32 }).toString();
+                    var salt = CryptoJS.lib.WordArray.random(128/8);
+                    var password = mydigitalstructure._scope.session.logonKey;
+                    if (password == undefined) {password = (Math.random()).toString()}
+                    var cryptoKey = CryptoJS.PBKDF2(password, salt, { keySize: keySize }).toString();
 
-                    oParam = ns1blankspace.util.setParam(oParam, 'cryptoKey', sCryptoKey);
+                    param = mydigitalstructure._util.param.set(param, 'cryptoKey', cryptoKey);
 
-                    if (bPersist)
+                    if (persist)
                     {	
-                        if (bLocal)
+                        if (local)
                         {	
-                            ns1blankspace.util.whenCan.execute(
+                            mydigitalstructure._util.whenCan.invoke(
                             {
                                 now:
                                 {
-                                    method: ns1blankspace.util.local.cache.save,
+                                    method: mydigitalstructure._util.local.cache.save,
                                     param:
                                     {
                                         key: sCryptoKeyReference,
@@ -86,7 +86,7 @@ mydigitalstructure._util.protect =
                 }
                 else
                 {	
-                    var sCryptoKey = ns1blankspace.util.getParam(oParam, 'cryptoKey', {remove: true}).value;
+                    var sCryptoKey = mydigitalstructure._util.param.get(oParam, 'cryptoKey', {remove: true}).value;
 
                     if (sCryptoKeyReference && sCryptoKey)
                     {	
@@ -102,9 +102,9 @@ mydigitalstructure._util.protect =
 
         search: 	function(oParam)
                     {
-                        var bLocal = ns1blankspace.util.getParam(oParam, 'local', {"default": false}).value;
-                        var sCryptoKeyReference = ns1blankspace.util.getParam(oParam, 'cryptoKeyReference').value;
-                        var bCreateKey = ns1blankspace.util.getParam(oParam, 'createKey', {"default": false}).value;
+                        var bLocal = mydigitalstructure._util.param.get(oParam, 'local', {"default": false}).value;
+                        var sCryptoKeyReference = mydigitalstructure._util.param.get(oParam, 'cryptoKeyReference').value;
+                        var bCreateKey = mydigitalstructure._util.param.get(oParam, 'createKey', {"default": false}).value;
 
                         if (ns1blankspace.util.protect.key.data[sCryptoKeyReference] !== undefined)
                         {	
@@ -112,7 +112,7 @@ mydigitalstructure._util.protect =
                         }
                         else
                         {	
-                            var sProtectCryptoKey = ns1blankspace.util.getParam(oParam, 'protectCryptoKey').value;
+                            var sProtectCryptoKey = mydigitalstructure._util.param.get(oParam, 'protectCryptoKey').value;
 
                             if (sProtectCryptoKey === undefined)
                             {
@@ -197,13 +197,13 @@ mydigitalstructure._util.protect =
 
 encrypt: 	function(oParam)
     {
-        if (ns1blankspace.util.getParam(oParam, 'cryptoKey').exists)
+        if (mydigitalstructure._util.param.get(oParam, 'cryptoKey').exists)
         {
-            var sData = ns1blankspace.util.getParam(oParam, 'data', {remove: true}).value;
-            var sCryptoKey = ns1blankspace.util.getParam(oParam, 'cryptoKey', {remove: true}).value;
+            var sData = mydigitalstructure._util.param.get(oParam, 'data', {remove: true}).value;
+            var sCryptoKey = mydigitalstructure._util.param.get(oParam, 'cryptoKey', {remove: true}).value;
             var sProtectedData = CryptoJS.AES.encrypt(sData, sCryptoKey).toString();
 
-            if (ns1blankspace.util.getParam(oParam, 'onComplete').exists)
+            if (mydigitalstructure._util.param.get(oParam, 'onComplete').exists)
             {	
                 oParam = ns1blankspace.util.setParam(oParam, 'protectedData', sProtectedData);
                 ns1blankspace.util.onComplete(oParam)
@@ -235,13 +235,13 @@ encrypt: 	function(oParam)
 
 decrypt: 	function(oParam)
     {
-        if (ns1blankspace.util.getParam(oParam, 'cryptoKey').value)
+        if (mydigitalstructure._util.param.get(oParam, 'cryptoKey').value)
         {
-            var sProtectedData = ns1blankspace.util.getParam(oParam, 'protectedData', {remove: true}).value;
-            var sCryptoKey = ns1blankspace.util.getParam(oParam, 'cryptoKey', {remove: true}).value;
+            var sProtectedData = mydigitalstructure._util.param.get(oParam, 'protectedData', {remove: true}).value;
+            var sCryptoKey = mydigitalstructure._util.param.get(oParam, 'cryptoKey', {remove: true}).value;
             var sData = CryptoJS.AES.decrypt(sProtectedData, sCryptoKey).toString(CryptoJS.enc.Utf8);
 
-            if (ns1blankspace.util.getParam(oParam, 'onComplete').exists)
+            if (mydigitalstructure._util.param.get(oParam, 'onComplete').exists)
             {	
                 oParam = ns1blankspace.util.setParam(oParam, 'data', sData)
                 ns1blankspace.util.onComplete(oParam)
