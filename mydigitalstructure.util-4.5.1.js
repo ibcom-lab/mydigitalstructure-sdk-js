@@ -5905,6 +5905,8 @@ mydigitalstructure._util.whenCan =
                 
     complete: function(returnData, param)
     {
+		var onComplete = mydigitalstructure._util.param.get(param, 'onComplete').value;
+
         if (mydigitalstructure._util.whenCan.queue.length > 0)
         {	
             var thenQueue;
@@ -5954,6 +5956,10 @@ mydigitalstructure._util.whenCan =
                 }
             }	
         }
+		else if (onComplete != undefined)
+		{
+			mydigitalstructure._util.onComplete(param)
+		}
         
         return returnData;
     }			

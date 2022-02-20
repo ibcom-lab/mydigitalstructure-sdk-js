@@ -35,10 +35,10 @@ mydigitalstructure._util.protect =
                 var persist = mydigitalstructure._util.param.get(param, 'persist', {default: false}).value;
                 var cryptoKeyReference = mydigitalstructure._util.param.get(param, 'cryptoKeyReference').value;
                 var local = mydigitalstructure._util.param.get(param, 'local', {default: false}).value;
-                var keySize = 512/32;
+                var keySize = mydigitalstructure._util.param.get(param, 'local', {default: 512/32}).value;
                 var savedCryptoKey = mydigitalstructure._util.param.get(param, 'savedCryptoKey').value;
 
-                if (!savedCryptoKey && persist)
+                if (!savedCryptoKey)
                 {	
                     var salt = CryptoJS.lib.WordArray.random(128/8);
                     var password = mydigitalstructure._scope.session.logonKey;
@@ -93,14 +93,19 @@ mydigitalstructure._util.protect =
                             });	
                         }
                     }
+                    else
+                    {
+                        param = mydigitalstructure._util.param.set(param, 'savedCryptoKey', cryptoKey);
+                        mydigitalstructure._util.protect.key.create.single(param);
+                    }
                 }
                 else
                 {	
                     var cryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
 
-                    if (cryptoKeyReference && cryptoKey)
+                    if (cryptoKeyReference != undefined && savedCryptoKey != undefined)
                     {	
-                        mydigitalstructure._util.protect.key.data[cryptoKeyReference] = cryptoKey;
+                        mydigitalstructure._util.protect.key.data[cryptoKeyReference] = savedCryptoKey;
                     }
 
                     return mydigitalstructure._util.whenCan.complete(savedCryptoKey, param)
@@ -220,10 +225,18 @@ mydigitalstructure._util.protect =
 
     encrypt: function(param)
     {
-        if (mydigitalstructure._util.param.get(param, 'cryptoKey').exists)
+        var cryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
+        var cryptoKeyReference = mydigitalstructure._util.param.get(param, 'cryptoKeyReference').value;
+
+        if (cryptoKey == undefined && cryptoKeyReference != undefined)
+        {
+            cryptoKey = mydigitalstructure._util.protect.key.data[cryptoKeyReference];
+        }
+
+        if (cryptoKey != undefined)
         {
             var data = mydigitalstructure._util.param.get(param, 'data', {remove: true}).value;
-            var sCryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
+
             var protectedData = CryptoJS.AES.encrypt(data, cryptoKey).toString();
 
             if (mydigitalstructure._util.param.get(param, 'onComplete').exists)
@@ -238,7 +251,7 @@ mydigitalstructure._util.protect =
         }
         else
         {	
-            mydigitalstructure._util.whenCan.execute(
+            mydigitalstructure._util.whenCan.invoke(
             {
                 now:
                 {
@@ -258,10 +271,17 @@ mydigitalstructure._util.protect =
 
     decrypt: function(param)
     {
-        if (mydigitalstructure._util.param.get(param, 'cryptoKey').value)
+        var cryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
+        var cryptoKeyReference = mydigitalstructure._util.param.get(param, 'cryptoKeyReference').value;
+
+        if (cryptoKey == undefined && cryptoKeyReference != undefined)
+        {
+            cryptoKey = mydigitalstructure._util.protect.key.data[cryptoKeyReference];
+        }
+
+        if (cryptoKey != undefined)
         {
             var protectedData = mydigitalstructure._util.param.get(param, 'protectedData', {remove: true}).value;
-            var cryptoKey = mydigitalstructure._util.param.get(param, 'cryptoKey', {remove: true}).value;
             var data = CryptoJS.AES.decrypt(protectedData, cryptoKey).toString(CryptoJS.enc.Utf8);
 
             if (mydigitalstructure._util.param.get(param, 'onComplete').exists)
@@ -276,7 +296,7 @@ mydigitalstructure._util.protect =
         }
         else
         {	
-            mydigitalstructure._util.whenCan.execute(
+            mydigitalstructure._util.whenCan.invoke(
             {
                 now:
                 {
@@ -293,4 +313,47 @@ mydigitalstructure._util.protect =
             });
         }	
     }								
+}
+
+mydigitalstructure._util.factory.protect = function (param)
+{
+	mydigitalstructure._util.controller.add(
+	[
+        {
+            name: 'util-protect-available',
+            code: function (param)
+            {
+                return mydigitalstructure._util.protect.available(param)
+            }
+        },
+        {
+            name: 'util-protect-encrypt',
+            code: function (param)
+            {
+                return mydigitalstructure._util.protect.encrypt(param)
+            }
+        },
+        {
+            name: 'util-protect-decrypt',
+            code: function (param)
+            {
+                return mydigitalstructure._util.protect.decrypt(param)
+            }
+        },
+        {
+            name: 'util-protect-key-create',
+            code: function (param)
+            {
+                return mydigitalstructure._util.protect.key.create.single(param)
+            }
+        },
+        {
+            name: 'util-protect-key-search',
+            code: function (param)
+            {
+                return mydigitalstructure._util.protect.key.create.search(param)
+            }
+        }
+        
+    ]);
 }
