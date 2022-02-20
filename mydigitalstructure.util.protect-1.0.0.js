@@ -13,6 +13,9 @@
         2b. Use the cloudKey to encrypt the local key
     3. Use the local [localDataProtectionKey] key to encrypt data
 
+    Also; you can use object "core_protect_ciphertext" to create hashes of data as signatures etc
+
+    More @ https://docs.mydigitalstructure.cloud/protect_cryptography
 */
 
 mydigitalstructure._util.protect =
