@@ -1892,9 +1892,9 @@ mydigitalstructure._util =
                                                         message = 'Logon name, password and/or code is incorrect.'
                                                     }
 
-                                                    if (data.error.errornotes == 'log on key has not been requested.')
+                                                    if (data.error.errornotes == 'LogonKey has not been requested')
                                                     {
-
+                                                        message = 'There is an issue with your current browser session.  Please refresh the webpage and trying again.'
                                                     }
 
                                                     mydigitalstructure._util.sendToView(
