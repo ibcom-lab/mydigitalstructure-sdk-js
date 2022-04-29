@@ -4644,6 +4644,7 @@ mydigitalstructure._util.svgToImage = function (param)
 				context.drawImage(svgImage, 0, 0);
 				imageHTMLTemplate = imageHTMLTemplate.replace('{{src}}', canvas.toDataURL("image/png"));
 				$(imageContainerSelector).html(imageHTMLTemplate);
+				mydigitalstructure._util.onComplete(param);
 			};
 		}
 	}
