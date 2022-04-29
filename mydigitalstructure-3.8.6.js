@@ -4566,6 +4566,7 @@ mydigitalstructure._util.svgToImage = function (param)
 	var serialise = mydigitalstructure._util.param.get(param, 'serialise', {default: true}).value;
 	var showSVGURI = mydigitalstructure._util.param.get(param, 'showSVGURI', {default: false}).value;
 	var svgData = mydigitalstructure._util.param.get(param, 'svgData').value;
+	var onRenderController = mydigitalstructure._util.param.get(param, 'onRenderController').value;
 
 	if (svgURI == undefined && attachmentLink != undefined)
 	{
@@ -4644,7 +4645,11 @@ mydigitalstructure._util.svgToImage = function (param)
 				context.drawImage(svgImage, 0, 0);
 				imageHTMLTemplate = imageHTMLTemplate.replace('{{src}}', canvas.toDataURL("image/png"));
 				$(imageContainerSelector).html(imageHTMLTemplate);
-				mydigitalstructure._util.onComplete(param);
+
+				if (onRenderController != undefined)
+				{
+					mydigitalstructure._util.controller.invoke(onRenderController, param);
+				}
 			};
 		}
 	}
