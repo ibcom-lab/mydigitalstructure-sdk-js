@@ -5109,38 +5109,56 @@ mydigitalstructure._util.controller.add(
 	}
 });
 
-mydigitalstructure._util.controller.add(
-{
-	name: 'util-data-clean',
-	code: function (param)
-	{
-		return mydigitalstructure._util.data.clean(param);
-	}
-});
-
-mydigitalstructure._util.clean = function (data)
+mydigitalstructure._util.decode = function (data)
 {
 	var dataReturn = {}
 
-	if (_.isObject(data))
+	if (_.isPlainObject(data))
 	{
 		_.each(data, function (value, key)
 		{
-			dataReturn[key] = mydigitalstructure._util._clean(value)
+			dataReturn[key] = mydigitalstructure._util._decode(value)
 		});
 	}
 	else
 	{
-		dataReturn = mydigitalstructure._util._clean(data)
+		dataReturn = mydigitalstructure._util._decode(data)
 	}
 
 	return dataReturn;
 };
 
-mydigitalstructure._util._clean = function(param)
+mydigitalstructure._util._decode = function(value)
 {
+    var dataReturn = '';
+
+	if (_.isUndefined(value)) {value = ''};
+
+    if (_.isObject(window.he))
+    {
+        dataReturn = he.decode(value);
+    }
+    else if (_.isFunction(_.unescapeHTML))
+    {
+        dataReturn = _.unescapeHTML(value);
+    }
+    else
+    {
+        dataReturn = _.unescape(value);
+    }
+
+    return dataReturn;
 }
 
+mydigitalstructure._util.controller.add(
+{
+    name: 'util-decode',
+    code: function (param)
+    {
+        return mydigitalstructure._util.decode(param);
+    }
+});
+    
 mydigitalstructure._util.menu =
 {
 	set: function (param)
