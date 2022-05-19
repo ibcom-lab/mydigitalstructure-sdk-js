@@ -1,7 +1,7 @@
 mydigitalstructure-sdk-js has MOVED!
 ====================================
 
-Version 4.5.5 (19MAY2022) is the latest version using this repository.
+Version 3.8.9 (19MAY2022) is the latest version using this repository.
 
 The latest code is @
 https://github.com/ibcom-lab/entityos-sdk
