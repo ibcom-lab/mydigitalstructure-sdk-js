@@ -1,8 +1,9 @@
-mydigitalstructure-sdk-js
-==========================
+mydigitalstructure-sdk-js has MOVED!
+====================================
 
-<a href="http://mydigitalstructure.com/sdks#js">Documentation</a>
+Version 4.5.5 (19MAY2022) is the latest version using this repository.
 
-It depends on jQuery (any version) - reference it before this SDK.
+The latest code is @
+https://github.com/ibcom-lab/entityos-sdk
 
-It loads http://mydigitalstructure.com/jscripts/md5-min.js
+This code exposes the new entityos object and an alias as mydigitalstructure for full backwards compatibility.
