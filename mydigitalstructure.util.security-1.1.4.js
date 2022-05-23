@@ -1737,7 +1737,7 @@ mydigitalstructure._util.security.trusted =
         
                     if (trustedLogon.issuer == undefined)
                     {
-                        trustedLogon.issuer = indow.location.host;
+                        trustedLogon.issuer = window.location.host;
                     }
         
                     if (trustedLogon.identityProviderAppName == undefined)
