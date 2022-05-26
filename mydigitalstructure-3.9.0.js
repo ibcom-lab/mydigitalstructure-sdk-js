@@ -1557,7 +1557,7 @@ mydigitalstructure._util =
                                             logonkey: data.logonkey,
                                         });
 
-                                        if (data.samlidentityproviderid != '')
+                                        if (_.isSet(data.samlidentityproviderid))
                                         {
                                             mydigitalstructure._scope.session = _.assign(mydigitalstructure._scope.session,
                                             {
